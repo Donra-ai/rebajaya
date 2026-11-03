@@ -1,0 +1,16 @@
+{
+  "name": "RebajaYA - Salud & Dieta Familiar",
+  "short_name": "RebajaYA",
+  "description": "Aplicación guiada de salud, nutrición e hidratación para tu familia.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#090d16",
+  "theme_color": "#0ea5e9",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    }
+  ]
+}

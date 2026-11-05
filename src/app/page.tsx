@@ -31,6 +31,7 @@ import AiDietGenerator from '@/components/AiDietGenerator';
 import PwaInstallPrompt from '@/components/PwaInstallPrompt';
 import AuthScreen from '@/components/AuthScreen';
 import HabitStreakCard from '@/components/HabitStreakCard';
+import NotificationManager from '@/components/NotificationManager';
 import { Sparkles, Calendar, Lock, ChevronDown, CheckCircle, LogOut } from 'lucide-react';
 
 export default function HomePage() {
@@ -284,8 +285,18 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Perfil Activo y Botón de Bloqueo / Cambio de Usuario */}
+          {/* Perfil Activo, Notificaciones y Botón de Bloqueo / Cambio de Usuario */}
           <div className="flex items-center gap-2">
+            {/* Recordatorios Médicos de Comidas y Agua */}
+            <NotificationManager
+              profile={activeProfile}
+              plan={mealPlan}
+              completedMealIds={completedMealIds}
+              waterAmount={waterAmount}
+              onToggleMeal={handleToggleMeal}
+              onAddWater={handleAddWater}
+            />
+
             <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-2xl">
               <span className="text-xl">{activeProfile.avatar}</span>
               <div className="hidden sm:block text-left">

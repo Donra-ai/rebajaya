@@ -21,6 +21,7 @@ import {
   Volume2,
   VolumeX,
   Pencil,
+  BellRing,
 } from 'lucide-react';
 
 interface MealScheduleProps {
@@ -533,9 +534,14 @@ export default function MealSchedule({
 
           const [mealHours, mealMins] = meal.time.split(':').map(Number);
           const mealTotalMins = (mealHours || 0) * 60 + (mealMins || 0);
+          const diffMinutes =
+            currentTotalMinutes !== null ? currentTotalMinutes - mealTotalMins : 0;
+          const isOverdue =
+            selectedDay === todayKey && !isDone && diffMinutes >= 5 && diffMinutes <= 120;
           const isUpcomingOrCurrent =
             selectedDay === todayKey &&
             currentTotalMinutes !== null &&
+            !isOverdue &&
             Math.abs(currentTotalMinutes - mealTotalMins) <= 60;
 
           return (
@@ -544,6 +550,8 @@ export default function MealSchedule({
               className={`relative rounded-2xl p-5 border transition-all duration-200 ${
                 isDone
                   ? 'bg-emerald-950/20 border-emerald-500/40 opacity-80'
+                  : isOverdue
+                  ? 'bg-gradient-to-br from-slate-900 via-rose-950/20 to-slate-900 border-rose-500/60 shadow-lg shadow-rose-500/10 ring-2 ring-rose-500/30'
                   : isUpcomingOrCurrent
                   ? 'bg-gradient-to-br from-slate-800/90 to-slate-900 border-emerald-500/80 shadow-lg shadow-emerald-500/10 ring-2 ring-emerald-500/30'
                   : 'bg-slate-800/50 border-slate-700/60 hover:border-slate-600'
@@ -571,6 +579,13 @@ export default function MealSchedule({
                       <span>{meal.time} hrs</span>
                       <Pencil className="w-2.5 h-2.5 text-amber-400/70 group-hover:text-amber-200 opacity-60 group-hover:opacity-100 transition-all ml-0.5" />
                     </button>
+
+                    {isOverdue && (
+                      <span className="text-[10px] px-2.5 py-0.5 rounded-full font-black bg-rose-500/20 text-rose-300 border border-rose-500/40 animate-pulse flex items-center gap-1">
+                        <BellRing className="w-3 h-3 text-rose-400" />
+                        <span>¡Han pasado {diffMinutes} min! Recordatorio</span>
+                      </span>
+                    )}
 
                     {isUpcomingOrCurrent && !isDone && (
                       <span className="text-[10px] px-2 py-0.5 rounded-full font-extrabold bg-emerald-500 text-slate-950 animate-bounce">

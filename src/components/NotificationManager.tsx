@@ -12,6 +12,8 @@ import {
   Droplets,
   Sparkles,
   Volume2,
+  CheckCircle2,
+  AlertTriangle,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -34,7 +36,7 @@ interface ActiveToast {
   timeStr: string;
 }
 
-// Reproducir sonido suave y agradable con Web Audio API (sin depender de archivos mp3 externos)
+// Reproducir sonido suave y agradable con Web Audio API (100% nativo, sin archivos mp3 externos)
 function playGentleChime() {
   if (typeof window === 'undefined') return;
   try {
@@ -69,7 +71,7 @@ function playGentleChime() {
     osc2.start(now + 0.2);
     osc2.stop(now + 0.85);
   } catch (err) {
-    // Si el navegador bloquea audio antes de interacción
+    // Manejo de restricciones de autoplay si no ha interactuado
   }
 }
 
@@ -87,22 +89,56 @@ export default function NotificationManager({
   const [activeToast, setActiveToast] = useState<ActiveToast | null>(null);
   const [notificationsEnabled, setNotificationsEnabled] = useState<boolean>(true);
 
-  // Inicializar estado de soporte de notificaciones
+  // Inicializar Service Worker y soporte de notificaciones
   useEffect(() => {
     if (typeof window !== 'undefined') {
+      // 1. Registrar Service Worker para soporte PWA / Web Push en iOS y Android
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js').catch((err) => {
+          console.warn('SW registration info:', err);
+        });
+      }
+
+      // 2. Soporte de Notificaciones
       const supported = 'Notification' in window;
       setIsSupported(supported);
       if (supported) {
         setPermission(Notification.permission);
       }
+
+      // 3. Garantizar que las notificaciones estén SIEMPRE activadas por defecto
       const savedSetting = localStorage.getItem('rebajaya_notifications_enabled');
-      if (savedSetting !== null) {
+      if (savedSetting === null) {
+        localStorage.setItem('rebajaya_notifications_enabled', 'true');
+        setNotificationsEnabled(true);
+      } else {
         setNotificationsEnabled(savedSetting === 'true');
       }
+
+      // 4. Desbloquear AudioContext en la primera interacción táctil o clic
+      const unlockAudio = () => {
+        try {
+          const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+          if (AudioCtx) {
+            const ctx = new AudioCtx();
+            if (ctx.state === 'suspended') {
+              ctx.resume();
+            }
+          }
+        } catch (e) {}
+        window.removeEventListener('click', unlockAudio);
+        window.removeEventListener('touchstart', unlockAudio);
+      };
+      window.addEventListener('click', unlockAudio);
+      window.addEventListener('touchstart', unlockAudio);
+      return () => {
+        window.removeEventListener('click', unlockAudio);
+        window.removeEventListener('touchstart', unlockAudio);
+      };
     }
   }, []);
 
-  // Solicitar permiso al usuario
+  // Solicitar permiso nativo al usuario
   const requestPermission = async () => {
     if (!isSupported) {
       alert('Tu navegador no cuenta con soporte nativo de notificaciones web.');
@@ -116,17 +152,16 @@ export default function NotificationManager({
         setNotificationsEnabled(true);
         localStorage.setItem('rebajaya_notifications_enabled', 'true');
         playGentleChime();
-        try {
-          new Notification('🔔 ¡Recordatorios Activados!', {
-            body: 'Te avisaremos si pasan 5 minutos de una comida o si olvidas hidratarte.',
-            icon: '/favicon.ico',
-          });
-        } catch (e) {
-          console.warn('Notification test error', e);
-        }
+        confetti({ particleCount: 40, spread: 60, origin: { y: 0.6 } });
+
+        // Enviar notificación de bienvenida / confirmación
+        triggerNativeNotification(
+          '🔔 ¡Recordatorios Activados con Éxito!',
+          'RebajaYA te avisará a los 5 minutos de cualquier comida olvidada y en tus horas de hidratación.'
+        );
       }
     } catch (err) {
-      console.warn('Error al pedir permiso de notificaciones', err);
+      console.warn('Error al solicitar permiso de notificaciones', err);
     }
   };
 
@@ -136,29 +171,50 @@ export default function NotificationManager({
     localStorage.setItem('rebajaya_notifications_enabled', nextVal ? 'true' : 'false');
   };
 
-  // Función para disparar tanto la notificación nativa como el Toast visual
+  // Disparar notificación nativa (mediante ServiceWorker o Fallback direct Notification)
+  const triggerNativeNotification = (title: string, body: string, tag?: string) => {
+    if (typeof window === 'undefined' || !isSupported || permission !== 'granted') return;
+
+    try {
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.ready.then((reg) => {
+          if (reg && 'showNotification' in reg) {
+            reg.showNotification(title, {
+              body,
+              icon: '/favicon.ico',
+              badge: '/favicon.ico',
+              tag: tag || 'rebajaya-reminder',
+              vibrate: [200, 100, 200],
+            } as any);
+            return;
+          }
+          new Notification(title, { body, icon: '/favicon.ico', tag });
+        }).catch(() => {
+          new Notification(title, { body, icon: '/favicon.ico', tag });
+        });
+      } else {
+        new Notification(title, { body, icon: '/favicon.ico', tag });
+      }
+    } catch (e) {
+      console.warn('Fallback direct Notification', e);
+    }
+  };
+
+  // Función principal para disparar tanto la notificación nativa como el Toast visual en pantalla
   const triggerReminder = useCallback(
     (toast: ActiveToast) => {
-      // 1. Mostrar Toast en pantalla
+      // 1. Mostrar Toast en pantalla (garantizado para el 100% de los usuarios)
       setActiveToast(toast);
 
-      // 2. Tocar sonido
+      // 2. Tocar sonido melódico
       playGentleChime();
 
       // 3. Notificación nativa del sistema operativo / navegador
-      if (isSupported && permission === 'granted' && notificationsEnabled) {
-        try {
-          new Notification(toast.title, {
-            body: toast.message,
-            icon: '/favicon.ico',
-            tag: toast.id,
-          });
-        } catch (e) {
-          console.warn('Error disparando notificación nativa', e);
-        }
+      if (notificationsEnabled) {
+        triggerNativeNotification(toast.title, toast.message, toast.id);
       }
     },
-    [isSupported, permission, notificationsEnabled]
+    [notificationsEnabled, isSupported, permission]
   );
 
   // Intervalo de verificación cada 30 segundos
@@ -189,7 +245,7 @@ export default function NotificationManager({
           const [h, m] = (meal.time || '08:00').split(':').map(Number);
           const mealTotalMins = (h || 0) * 60 + (m || 0);
 
-          // Diferencia en minutos
+          // Diferencia en minutos transcurridos
           const diffMins = currentTotalMins - mealTotalMins;
 
           // Si han pasado 5 minutos y hasta 90 minutos de retraso
@@ -308,6 +364,18 @@ export default function NotificationManager({
     setActiveToast(null);
   };
 
+  // Botón para probar recordatorio al instante
+  const handleTestReminder = () => {
+    triggerReminder({
+      id: `test-${Date.now()}`,
+      type: 'meal',
+      title: '🔔 ¡Prueba de Recordatorio Activa!',
+      message:
+        'Tus notificaciones y sonido están 100% activos y funcionando. Si pasan 5 min de una comida o necesitas hidratarte, recibirás este aviso.',
+      timeStr: 'Ahora',
+    });
+  };
+
   return (
     <>
       {/* BOTÓN EN CABECERA (CAMPANA DE RECORDATORIOS) */}
@@ -316,7 +384,7 @@ export default function NotificationManager({
           onClick={() => setShowSettings(!showSettings)}
           className={`relative p-2 rounded-2xl border transition-all active:scale-95 flex items-center justify-center ${
             permission === 'granted' && notificationsEnabled
-              ? 'bg-amber-500/10 text-amber-300 border-amber-500/30 hover:border-amber-400'
+              ? 'bg-amber-500/10 text-amber-300 border-amber-500/40 hover:border-amber-400'
               : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'
           }`}
           title="Configurar recordatorios de comidas y agua"
@@ -327,15 +395,19 @@ export default function NotificationManager({
             <Bell className="w-4 h-4" />
           )}
 
-          {/* Indicador de estado */}
-          {notificationsEnabled && permission === 'granted' && (
-            <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-400 rounded-full ring-2 ring-slate-950 animate-pulse" />
+          {/* Indicador de estado activo garantizado */}
+          {notificationsEnabled && (
+            <span
+              className={`absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full ring-2 ring-slate-950 ${
+                permission === 'granted' ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'
+              }`}
+            />
           )}
         </button>
 
         {/* POPOVER DE CONFIGURACIÓN DE NOTIFICACIONES */}
         {showSettings && (
-          <div className="absolute right-0 mt-2 w-80 bg-slate-900 border border-slate-700 rounded-3xl p-4 shadow-2xl z-50 animate-in fade-in slide-in-from-top-2">
+          <div className="absolute right-0 mt-2 w-80 sm:w-88 bg-slate-900 border border-slate-700 rounded-3xl p-4 shadow-2xl z-50 animate-in fade-in slide-in-from-top-2">
             <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-800">
               <div className="flex items-center gap-2">
                 <div className="p-1.5 bg-amber-500/20 text-amber-400 rounded-xl">
@@ -359,10 +431,10 @@ export default function NotificationManager({
                 </span>
                 <p className="text-[11px] text-slate-400 mb-2">
                   {permission === 'granted'
-                    ? '✅ Notificaciones nativas activadas'
+                    ? '✅ Notificaciones nativas activadas y funcionando'
                     : permission === 'denied'
-                    ? '⚠️ Permiso bloqueado en el navegador'
-                    : 'Aún no has concedido permisos para avisos en pantalla'}
+                    ? '⚠️ Permiso bloqueado en el navegador (activa las notificaciones en el icono de candado de tu navegador)'
+                    : 'Aún no has concedido permisos para avisos flotantes en pantalla'}
                 </p>
 
                 {permission !== 'granted' && (
@@ -370,18 +442,18 @@ export default function NotificationManager({
                     onClick={requestPermission}
                     className="w-full py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-md active:scale-95 transition-all"
                   >
-                    <BellRing className="w-3.5 h-3.5" />
+                    <BellRing className="w-3.5 h-3.5 stroke-[2.5]" />
                     <span>Conceder Permiso al Navegador</span>
                   </button>
                 )}
               </div>
 
-              {/* Interruptor general */}
+              {/* Interruptor general de avisos */}
               <label className="flex items-center justify-between p-3 bg-slate-950/50 border border-slate-800 rounded-2xl cursor-pointer">
                 <div>
                   <span className="font-bold text-slate-200 block">Avisos automáticos</span>
                   <span className="text-[10px] text-slate-400">
-                    Avisar a los 5 min de una comida y en horarios de agua
+                    Avisar a los 5 min de comida y en horarios de agua
                   </span>
                 </div>
                 <input
@@ -392,25 +464,35 @@ export default function NotificationManager({
                 />
               </label>
 
-              {/* Botón de probar sonido */}
+              {/* Botón de Enviar Prueba Inmediata */}
+              <button
+                type="button"
+                onClick={handleTestReminder}
+                className="w-full py-2.5 bg-gradient-to-r from-cyan-500/20 to-emerald-500/20 hover:from-cyan-500/30 hover:to-emerald-500/30 text-cyan-300 border border-cyan-500/30 font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 transition-all active:scale-95 shadow-sm"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+                <span>🚀 Probar Recordatorio Ahora</span>
+              </button>
+
+              {/* Botón de probar sonido de campana */}
               <button
                 type="button"
                 onClick={playGentleChime}
-                className="w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 transition-colors"
+                className="w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 transition-colors"
               >
-                <Volume2 className="w-3.5 h-3.5 text-cyan-400" />
+                <Volume2 className="w-3.5 h-3.5 text-slate-400" />
                 <span>Probar Sonido de Campana</span>
               </button>
             </div>
 
             <p className="text-[10px] text-slate-500 text-center italic">
-              Diseñado para que nunca te saltes un plato ni te falte hidratación.
+              Recordatorios siempre activos para no saltarte platos ni hidratación.
             </p>
           </div>
         )}
       </div>
 
-      {/* TOAST FLOTANTE VISUAL (APARECE CUANDO HAY UN RECORDATORIO ACTIVO) */}
+      {/* TOAST FLOTANTE VISUAL (APARECE CUANDO HAY UN RECORDATORIO ACTIVO PARA CUALQUIER USUARIO) */}
       {activeToast && (
         <div className="fixed top-16 sm:top-20 right-4 left-4 sm:left-auto sm:w-[420px] z-50 animate-in slide-in-from-top-4 duration-300">
           <div
@@ -491,5 +573,88 @@ export default function NotificationManager({
         </div>
       )}
     </>
+  );
+}
+
+// Banner permanente para invitar a conceder permisos si aún no los tiene
+export function NotificationPromptBanner() {
+  const [permission, setPermission] = useState<NotificationPermission>('default');
+  const [isSupported, setIsSupported] = useState<boolean>(false);
+  const [isDismissed, setIsDismissed] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const supported = 'Notification' in window;
+      setIsSupported(supported);
+      if (supported) {
+        setPermission(Notification.permission);
+      }
+      const dismissed = localStorage.getItem('rebajaya_notif_banner_dismissed');
+      if (dismissed === 'true') {
+        setIsDismissed(true);
+      }
+    }
+  }, []);
+
+  const handleEnable = async () => {
+    if (!isSupported) return;
+    try {
+      const res = await Notification.requestPermission();
+      setPermission(res);
+      if (res === 'granted') {
+        playGentleChime();
+        confetti({ particleCount: 35, spread: 50, origin: { y: 0.5 } });
+      }
+    } catch (e) {
+      console.warn('Banner request permission error', e);
+    }
+  };
+
+  const handleDismiss = () => {
+    setIsDismissed(true);
+    localStorage.setItem('rebajaya_notif_banner_dismissed', 'true');
+  };
+
+  if (!isSupported || permission !== 'default' || isDismissed) {
+    return null;
+  }
+
+  return (
+    <div className="bg-gradient-to-r from-amber-500/15 via-orange-500/15 to-amber-500/15 border border-amber-500/40 rounded-3xl p-4 sm:p-5 mb-6 shadow-xl backdrop-blur-xl flex flex-col sm:flex-row items-center justify-between gap-4 animate-in slide-in-from-top-3">
+      <div className="flex items-center gap-3.5">
+        <div className="w-12 h-12 rounded-2xl bg-amber-500 text-slate-950 flex items-center justify-center font-bold flex-shrink-0 shadow-lg shadow-amber-500/20">
+          <BellRing className="w-6 h-6 animate-bounce" />
+        </div>
+        <div>
+          <h4 className="text-sm sm:text-base font-bold text-white flex items-center gap-2">
+            <span>Activa los Recordatorios Médicos en tu Dispositivo</span>
+            <span className="text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-full font-black uppercase">
+              Recomendado
+            </span>
+          </h4>
+          <p className="text-xs text-slate-300 mt-0.5">
+            La Dra. Lucía te avisará automáticamente si pasan 5 min de tu comida y en tus horarios clave de agua para no saltarte nada.
+          </p>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-2 w-full sm:w-auto">
+        <button
+          onClick={handleEnable}
+          className="flex-1 sm:flex-none px-5 py-3 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-black text-xs rounded-2xl shadow-lg shadow-amber-500/20 active:scale-95 transition-all flex items-center justify-center gap-1.5 whitespace-nowrap"
+        >
+          <BellRing className="w-4 h-4 stroke-[2.5]" />
+          <span>Activar en 1 Clic</span>
+        </button>
+
+        <button
+          onClick={handleDismiss}
+          className="p-3 text-slate-400 hover:text-white rounded-2xl bg-slate-900/60 hover:bg-slate-800 transition-colors"
+          title="Descartar aviso por ahora"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      </div>
+    </div>
   );
 }

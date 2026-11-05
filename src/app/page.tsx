@@ -31,7 +31,7 @@ import AiDietGenerator from '@/components/AiDietGenerator';
 import PwaInstallPrompt from '@/components/PwaInstallPrompt';
 import AuthScreen from '@/components/AuthScreen';
 import HabitStreakCard from '@/components/HabitStreakCard';
-import NotificationManager from '@/components/NotificationManager';
+import NotificationManager, { NotificationPromptBanner } from '@/components/NotificationManager';
 import { Sparkles, Calendar, Lock, ChevronDown, CheckCircle, LogOut } from 'lucide-react';
 
 export default function HomePage() {
@@ -323,6 +323,9 @@ export default function HomePage() {
 
       {/* Contenido Principal */}
       <div className="max-w-6xl mx-auto px-4 pt-6">
+        {/* Banner para Garantizar Activación de Notificaciones en 1 Clic */}
+        <NotificationPromptBanner />
+
         {/* Banner de Saludo y Fecha */}
         <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>

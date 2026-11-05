@@ -133,6 +133,8 @@ export default function HomePage() {
     const updated = await getProfiles();
     setProfiles(updated);
     await handleLoginProfile(newProfile);
+    // Abrir automáticamente la consulta de la Dra. Lucía (IA)
+    setIsDietModalOpen(true);
   };
 
   // Eliminar todos los datos y reiniciar app desde cero
@@ -224,7 +226,7 @@ export default function HomePage() {
   }
 
   // Si no hay perfil activo, mostrar la pantalla de autenticación por PIN / Onboarding
-  if (!activeProfile || !mealPlan) {
+  if (!activeProfile) {
     return (
       <AuthScreen
         profiles={profiles}

@@ -22,7 +22,7 @@ import {
 } from 'lucide-react';
 
 interface MealScheduleProps {
-  plan: MealPlan;
+  plan: MealPlan | null;
   completedMealIds: string[];
   onToggleMeal: (mealId: string) => void;
   onOpenDietModal: () => void;
@@ -63,6 +63,45 @@ export default function MealSchedule({
   onUpdatePlan,
   userProfile,
 }: MealScheduleProps) {
+  // Si aún no se ha creado el plan nutricional con la IA o PDF
+  if (!plan || (!plan.meals?.length && !plan.weeklyMeals)) {
+    return (
+      <div className="bg-slate-900/90 border border-slate-800 rounded-3xl p-6 sm:p-10 shadow-2xl backdrop-blur-xl text-center">
+        <div className="w-16 h-16 rounded-3xl bg-gradient-to-tr from-emerald-500/20 to-teal-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 mx-auto mb-4 shadow-lg shadow-emerald-500/10">
+          <Bot className="w-8 h-8" />
+        </div>
+
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-500/20 text-amber-300 text-xs font-bold rounded-full border border-amber-500/30 mb-3">
+          <span>🩺 Consulta Médica Inicial Pendiente</span>
+        </div>
+
+        <h3 className="text-2xl sm:text-3xl font-black text-white mb-3 tracking-tight">
+          Tu Menú Personalizado Aún No Ha Sido Creado
+        </h3>
+
+        <p className="text-slate-400 text-sm sm:text-base max-w-lg mx-auto mb-6 leading-relaxed">
+          En RebajaYA <span className="text-white font-semibold">no inventamos dietas genéricas</span>. Para garantizar que tu alimentación se ajuste a tus gustos, tus horarios de sueño y tu salud metabólica sin pasar hambre, la <strong className="text-emerald-400">Dra. Lucía</strong> necesita hacerte unas breves preguntas en tu consulta inicial.
+        </p>
+
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 max-w-md mx-auto">
+          <button
+            onClick={onOpenDietModal}
+            className="w-full sm:w-auto px-6 py-4 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black rounded-2xl shadow-xl shadow-emerald-500/20 active:scale-95 transition-all text-sm flex items-center justify-center gap-2"
+          >
+            <Bot className="w-5 h-5 stroke-[2.5]" />
+            <span>Iniciar Consulta con la Nutricionista IA</span>
+          </button>
+
+          <button
+            onClick={onOpenDietModal}
+            className="w-full sm:w-auto px-5 py-4 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-2xl border border-slate-700 hover:border-slate-600 transition-all text-sm flex items-center justify-center gap-2"
+          >
+            <span>Subir PDF del Médico</span>
+          </button>
+        </div>
+      </div>
+    );
+  }
   // Detectar día de la semana actual
   const getTodayKey = (): string => {
     const day = new Date().getDay(); // 0 domingo, 1 lunes...

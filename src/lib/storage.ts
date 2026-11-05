@@ -532,13 +532,20 @@ export function setActiveProfileId(id: string | null): void {
 }
 
 // ---------------- MEAL PLANS ----------------
-export async function getMealPlan(profileId: string): Promise<MealPlan> {
+export async function getMealPlan(profileId: string): Promise<MealPlan | null> {
   const plans = getLocal<Record<string, MealPlan>>(MEAL_PLANS_KEY, {});
 
-  if (!plans[profileId]) {
-    const newPlan = createDefaultMealPlan(profileId);
-    plans[profileId] = newPlan;
-    setLocal(MEAL_PLANS_KEY, plans);
+  // Si el plan guardado es el antiguo placeholder genérico, descartarlo para requerir consulta médica
+  if (plans[profileId]) {
+    if (
+      plans[profileId].source === 'manual' &&
+      plans[profileId].title === 'Plan Nutricional Clínico Semanal'
+    ) {
+      delete plans[profileId];
+      setLocal(MEAL_PLANS_KEY, plans);
+      return null;
+    }
+    return plans[profileId];
   }
 
   if (isSupabaseConfigured && supabase) {
@@ -552,6 +559,9 @@ export async function getMealPlan(profileId: string): Promise<MealPlan> {
         .single();
 
       if (data) {
+        if (data.source === 'manual' && data.title === 'Plan Nutricional Clínico Semanal') {
+          return null;
+        }
         const remotePlan: MealPlan = {
           id: data.id,
           profileId: data.profile_id,
@@ -571,7 +581,7 @@ export async function getMealPlan(profileId: string): Promise<MealPlan> {
     }
   }
 
-  return plans[profileId];
+  return null;
 }
 
 export async function saveMealPlan(plan: MealPlan): Promise<void> {

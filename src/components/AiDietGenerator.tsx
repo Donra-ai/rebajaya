@@ -154,6 +154,15 @@ export default function AiDietGenerator({
       summary: previewPlan.summary || '',
       dailyCaloriesEstimate: previewPlan.dailyCaloriesEstimate || 1800,
       meals: previewPlan.meals || [],
+      weeklyMeals: previewPlan.weeklyMeals || {
+        lunes: previewPlan.meals || [],
+        martes: previewPlan.meals || [],
+        miercoles: previewPlan.meals || [],
+        jueves: previewPlan.meals || [],
+        viernes: previewPlan.meals || [],
+        sabado: previewPlan.meals || [],
+        domingo: previewPlan.meals || [],
+      },
       updatedAt: new Date().toISOString(),
     };
 

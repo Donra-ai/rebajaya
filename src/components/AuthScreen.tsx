@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { UserProfile } from '@/types';
-import { Lock, Plus, ArrowLeft, Delete, Sparkles, Check, AlertCircle } from 'lucide-react';
+import { Lock, Plus, ArrowLeft, Delete, Sparkles, Check, AlertCircle, Droplets } from 'lucide-react';
 
 interface AuthScreenProps {
   profiles: UserProfile[];
@@ -35,10 +35,15 @@ export default function AuthScreen({
   const [newPin, setNewPin] = useState('');
   const [currentWeight, setCurrentWeight] = useState<number>(75);
   const [targetWeight, setTargetWeight] = useState<number>(70);
-  const [dailyWater, setDailyWater] = useState<number>(2000);
   const [heightCm, setHeightCm] = useState<number>(170);
   const [age, setAge] = useState<number>(30);
   const [createError, setCreateError] = useState<string>('');
+
+  // Cálculo automático de agua basado en hidratación científica (~35 ml por kg de peso corporal)
+  const calculatedWater = Math.max(
+    1750,
+    Math.round(((Number(currentWeight) || 75) * 35) / 250) * 250
+  );
 
   // Si no hay perfiles, forzar vista de creación
   useEffect(() => {
@@ -122,7 +127,7 @@ export default function AuthScreen({
       initialWeightKg: Number(currentWeight) || 75,
       currentWeightKg: Number(currentWeight) || 75,
       targetWeightKg: Number(targetWeight) || 70,
-      dailyWaterTargetMl: Number(dailyWater) || 2000,
+      dailyWaterTargetMl: calculatedWater,
       isMainUser: profiles.length === 0,
       createdAt: new Date().toISOString(),
     };
@@ -414,21 +419,8 @@ export default function AuthScreen({
                 </div>
               </div>
 
+              {/* Estatura y Edad */}
               <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs font-bold text-slate-300 block mb-1">
-                    Meta de Agua (ml)
-                  </label>
-                  <input
-                    type="number"
-                    step="250"
-                    required
-                    value={dailyWater}
-                    onChange={(e) => setDailyWater(Number(e.target.value))}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500"
-                  />
-                </div>
-
                 <div>
                   <label className="text-xs font-bold text-slate-300 block mb-1">
                     Estatura (cm)
@@ -439,6 +431,36 @@ export default function AuthScreen({
                     onChange={(e) => setHeightCm(Number(e.target.value))}
                     className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500"
                   />
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-slate-300 block mb-1">
+                    Edad (años)
+                  </label>
+                  <input
+                    type="number"
+                    value={age}
+                    onChange={(e) => setAge(Number(e.target.value))}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500"
+                  />
+                </div>
+              </div>
+
+              {/* Cálculo automático de agua por la IA */}
+              <div className="p-3.5 bg-cyan-950/30 border border-cyan-800/40 rounded-2xl flex items-center gap-3">
+                <div className="p-2.5 bg-cyan-500/20 text-cyan-400 rounded-xl flex-shrink-0">
+                  <Droplets className="w-5 h-5" />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between gap-1">
+                    <span className="text-xs font-bold text-cyan-300">Meta de Agua IA</span>
+                    <span className="text-xs font-black text-cyan-200 px-2.5 py-0.5 bg-cyan-500/20 border border-cyan-400/30 rounded-full font-mono">
+                      {calculatedWater} ml / día
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-400 mt-0.5 leading-tight">
+                    Calculada automáticamente por la IA para tu peso corporal. Tu Nutricionista IA la adaptará.
+                  </p>
                 </div>
               </div>
 

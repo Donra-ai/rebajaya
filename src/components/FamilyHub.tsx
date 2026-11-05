@@ -44,7 +44,7 @@ export default function FamilyHub({
       initialWeightKg: Number(initialWeight),
       currentWeightKg: Number(initialWeight),
       targetWeightKg: Number(targetWeight),
-      dailyWaterTargetMl: 2000,
+      dailyWaterTargetMl: Math.max(1750, Math.round(((Number(initialWeight) || 75) * 35) / 250) * 250),
       createdAt: new Date().toISOString(),
     };
 

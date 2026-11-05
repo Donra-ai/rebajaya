@@ -1,3 +1,12 @@
+export interface HealthBadge {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+  isUnlocked: boolean;
+  unlockedAt?: string;
+}
+
 export interface UserProfile {
   id: string;
   name: string;
@@ -9,6 +18,9 @@ export interface UserProfile {
   currentWeightKg: number;
   targetWeightKg: number;
   dailyWaterTargetMl: number;
+  currentStreakDays?: number;
+  lastActiveDate?: string;
+  unlockedBadges?: string[];
   isMainUser?: boolean; // Usuario principal o administrador
   createdAt: string;
 }

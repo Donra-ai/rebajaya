@@ -17,6 +17,8 @@ import {
   Loader2,
   AlertCircle,
   HelpCircle,
+  Volume2,
+  VolumeX,
 } from 'lucide-react';
 
 interface MealScheduleProps {
@@ -82,6 +84,43 @@ export default function MealSchedule({
   // Estados para modal de lista de compras
   const [showGroceryModal, setShowGroceryModal] = useState(false);
   const [checkedGroceries, setCheckedGroceries] = useState<Record<string, boolean>>({});
+
+  // Estado para lectura con voz (Web Speech API)
+  const [speakingMealId, setSpeakingMealId] = useState<string | null>(null);
+
+  const handleSpeakMeal = (meal: MealItem) => {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
+      alert('Tu navegador no cuenta con soporte de voz.');
+      return;
+    }
+
+    if (speakingMealId === meal.id) {
+      window.speechSynthesis.cancel();
+      setSpeakingMealId(null);
+      return;
+    }
+
+    window.speechSynthesis.cancel();
+    setSpeakingMealId(meal.id);
+
+    const speechText = `${meal.name}. Programada a las ${meal.time} horas. ${meal.description}. Consejo clínico de la doctora Lucía: ${meal.tips || 'Buen provecho y mastica con calma.'}`;
+    const utterance = new SpeechSynthesisUtterance(speechText);
+    utterance.lang = 'es-ES';
+    utterance.rate = 0.95;
+
+    utterance.onend = () => setSpeakingMealId(null);
+    utterance.onerror = () => setSpeakingMealId(null);
+
+    window.speechSynthesis.speak(utterance);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const now = new Date();
@@ -405,8 +444,8 @@ export default function MealSchedule({
                     </p>
                   )}
 
-                  {/* Botón para Sustituir / ¿No tienes este alimento? */}
-                  <div className="mt-3 flex items-center gap-2">
+                  {/* Botones de acción de la comida */}
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
                     <button
                       onClick={() => {
                         setSubstituteMeal(meal);
@@ -418,6 +457,28 @@ export default function MealSchedule({
                     >
                       <RefreshCw className="w-3.5 h-3.5" />
                       <span>¿No tienes este alimento? Sustituir</span>
+                    </button>
+
+                    <button
+                      onClick={() => handleSpeakMeal(meal)}
+                      className={`text-xs px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5 font-semibold active:scale-95 border ${
+                        speakingMealId === meal.id
+                          ? 'bg-teal-500 text-slate-950 border-teal-400 font-bold animate-pulse shadow-md shadow-teal-500/30'
+                          : 'text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-700/80 border-slate-700'
+                      }`}
+                      title="Escuchar preparación y consejo en voz alta"
+                    >
+                      {speakingMealId === meal.id ? (
+                        <>
+                          <VolumeX className="w-3.5 h-3.5" />
+                          <span>Pausar voz</span>
+                        </>
+                      ) : (
+                        <>
+                          <Volume2 className="w-3.5 h-3.5 text-teal-400" />
+                          <span>Escuchar</span>
+                        </>
+                      )}
                     </button>
                   </div>
                 </div>

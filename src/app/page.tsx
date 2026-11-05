@@ -18,6 +18,8 @@ import {
   addWeight,
   getReactions,
   addReaction,
+  getUserStreak,
+  getUserBadges,
 } from '@/lib/storage';
 import WaterTracker3D from '@/components/WaterTracker3D';
 import MealSchedule from '@/components/MealSchedule';
@@ -26,6 +28,7 @@ import FamilyHub from '@/components/FamilyHub';
 import AiDietGenerator from '@/components/AiDietGenerator';
 import PwaInstallPrompt from '@/components/PwaInstallPrompt';
 import AuthScreen from '@/components/AuthScreen';
+import HabitStreakCard from '@/components/HabitStreakCard';
 import { Sparkles, Calendar, Lock, ChevronDown, CheckCircle, LogOut } from 'lucide-react';
 
 export default function HomePage() {
@@ -212,6 +215,29 @@ export default function HomePage() {
     );
   }
 
+  // Racha de constancia y medallas de salud
+  const todayKey = (() => {
+    const day = new Date().getDay();
+    const map = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
+    return map[day];
+  })();
+
+  const todayMeals =
+    mealPlan?.weeklyMeals && mealPlan.weeklyMeals[todayKey]
+      ? mealPlan.weeklyMeals[todayKey]
+      : mealPlan?.meals || [];
+
+  const streakDays = activeProfile ? getUserStreak(activeProfile.id) : 0;
+  const badges = activeProfile
+    ? getUserBadges(
+        activeProfile,
+        waterAmount,
+        completedMealIds.length,
+        todayMeals.length,
+        weightHistory
+      )
+    : [];
+
   return (
     <main className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-white pb-20">
       {/* Barra Superior con Selector de Perfil */}
@@ -287,6 +313,18 @@ export default function HomePage() {
             </button>
           </div>
         </div>
+
+        {/* TARJETA DE CONSTANCIA, RACHAS Y LOGROS */}
+        <HabitStreakCard
+          profile={activeProfile}
+          waterToday={waterAmount}
+          waterTarget={activeProfile.dailyWaterTargetMl}
+          completedMealsCount={completedMealIds.length}
+          totalMealsCount={todayMeals.length}
+          weightHistory={weightHistory}
+          badges={badges}
+          streakDays={streakDays}
+        />
 
         {/* Pestañas de Navegación Móvil */}
         <div className="grid grid-cols-3 gap-2 p-1.5 bg-slate-900 rounded-2xl border border-slate-800 mb-6 sm:hidden">

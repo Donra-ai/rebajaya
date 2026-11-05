@@ -1,4 +1,4 @@
-import { UserProfile, MealPlan, WaterLog, WeightLog, FamilyReaction, MealItem } from '@/types';
+import { UserProfile, MealPlan, WaterLog, WeightLog, FamilyReaction, MealItem, HealthBadge } from '@/types';
 import { supabase, isSupabaseConfigured } from './supabaseClient';
 
 const PROFILES_KEY = 'rebajaya_profiles';
@@ -768,4 +768,103 @@ export async function addReaction(reaction: Omit<FamilyReaction, 'id' | 'timesta
       console.warn('Supabase addReaction error', err);
     }
   }
+}
+
+// ---------------- STREAKS & BADGES ----------------
+export function getUserStreak(profileId: string): number {
+  const waterLogs = getLocal<WaterLog[]>(WATER_LOGS_KEY, []).filter((l) => l.profileId === profileId);
+  const weightLogs = getLocal<WeightLog[]>(WEIGHT_LOGS_KEY, []).filter((l) => l.profileId === profileId);
+  const completedKeys = getLocal<Record<string, string[]>>(MEAL_LOGS_KEY, {});
+
+  const activeDates = new Set<string>();
+  waterLogs.forEach((w) => activeDates.add(w.date));
+  weightLogs.forEach((w) => activeDates.add(w.date));
+
+  // Fechas con comidas completadas
+  Object.keys(completedKeys).forEach((key) => {
+    if (key.startsWith(`${profileId}-`) && (completedKeys[key]?.length || 0) > 0) {
+      const datePart = key.replace(`${profileId}-`, '');
+      activeDates.add(datePart);
+    }
+  });
+
+  const todayStr = new Date().toISOString().split('T')[0];
+  let streak = 0;
+  const checkDate = new Date();
+
+  const todayActive = activeDates.has(todayStr);
+  if (!todayActive) {
+    checkDate.setDate(checkDate.getDate() - 1);
+  }
+
+  while (true) {
+    const dStr = checkDate.toISOString().split('T')[0];
+    if (activeDates.has(dStr)) {
+      streak++;
+      checkDate.setDate(checkDate.getDate() - 1);
+    } else {
+      break;
+    }
+  }
+
+  return Math.max(todayActive ? 1 : 0, streak);
+}
+
+export function getUserBadges(
+  profile: UserProfile,
+  waterToday: number,
+  completedMealsCount: number,
+  totalMealsToday: number,
+  weightHistory: WeightLog[]
+): HealthBadge[] {
+  const hasWaterGoal = waterToday >= profile.dailyWaterTargetMl;
+  const hasAllMeals = totalMealsToday > 0 && completedMealsCount >= totalMealsToday;
+  const hasPhoto = weightHistory.some((w) => !!w.photoUrl);
+  const hasLostWeight = profile.initialWeightKg - profile.currentWeightKg >= 1.0;
+  const streak = getUserStreak(profile.id);
+
+  return [
+    {
+      id: 'badge-first-step',
+      title: 'Primer Paso Saludable',
+      description: 'Registraste tu primer hábito en RebajaYA.',
+      icon: '🌱',
+      isUnlocked: waterToday > 0 || completedMealsCount > 0 || weightHistory.length > 0,
+    },
+    {
+      id: 'badge-hydrated',
+      title: 'Hidratación Cumplida',
+      description: `Completaste tu meta clínica diaria de ${profile.dailyWaterTargetMl} ml.`,
+      icon: '💧',
+      isUnlocked: hasWaterGoal,
+    },
+    {
+      id: 'badge-meals-done',
+      title: 'Día Perfecto de Nutrición',
+      description: 'Completaste el 100% de las comidas de tu día.',
+      icon: '🥗',
+      isUnlocked: hasAllMeals,
+    },
+    {
+      id: 'badge-photo-valiant',
+      title: 'Valiente en Fotos',
+      description: 'Guardaste una foto de progreso físico para comparar tu antes y después.',
+      icon: '📸',
+      isUnlocked: hasPhoto,
+    },
+    {
+      id: 'badge-streak-fire',
+      title: 'Constancia Imparable',
+      description: 'Alcanzaste 3 o más días consecutivos de constancia en tus hábitos.',
+      icon: '🔥',
+      isUnlocked: streak >= 3,
+    },
+    {
+      id: 'badge-kilo-down',
+      title: 'Primer Kilo Superado',
+      description: 'Has bajado 1 kg o más de peso saludable desde tu inicio.',
+      icon: '🏆',
+      isUnlocked: hasLostWeight,
+    },
+  ];
 }

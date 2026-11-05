@@ -363,6 +363,8 @@ export default function HomePage() {
                 completedMealIds={completedMealIds}
                 onToggleMeal={handleToggleMeal}
                 onOpenDietModal={() => setIsDietModalOpen(true)}
+                onUpdatePlan={handlePlanCreated}
+                userProfile={activeProfile}
               />
             </div>
 

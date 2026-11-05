@@ -213,3 +213,52 @@ PLAN_JSON>>>
 
   return { reply: rawResponse };
 }
+
+export async function replaceMealWithIngredients(
+  currentMeal: MealItem,
+  availableIngredients: string,
+  userProfile?: { name: string; weightKg: number; targetKg: number }
+): Promise<{ newMeal: MealItem; explanation: string }> {
+  const prompt = `
+Eres la Dra. Lucía, Nutricionista Clínica de RebajaYA.
+El paciente ${userProfile?.name || ''} no tiene los alimentos indicados para esta comida de su plan:
+- Comida actual: "${currentMeal.name}" (${currentMeal.type}) a las ${currentMeal.time} hrs.
+- Menú original: "${currentMeal.description}"
+- Ingredientes que el usuario SÍ tiene disponibles: "${availableIngredients}"
+
+Tu objetivo médico: Readaptar esta comida específica utilizando los ingredientes que tiene a mano (o básicos de cocina), asegurando que mantenga un equilibrio de proteínas, fibra y saciedad adecuado a su meta.
+
+Responde ÚNICAMENTE con un objeto JSON válido (sin formato markdown adicional, sin comillas triples \`\`\`json):
+{
+  "name": "Nombre apetitoso de la comida adaptada",
+  "description": "Detalle de alimentos, porciones claras y preparación rápida con sus ingredientes.",
+  "tips": "Consejo nutricional de por qué este plato sustituto cumple perfectamente con su meta.",
+  "explanation": "Mensaje médico cálido y motivador (1 o 2 oraciones) explicándole por qué este cambio funciona excelente."
+}
+`;
+
+  const contents = [{ role: 'user', parts: [{ text: prompt }] }];
+  const rawText = await callWithFallback(
+    contents,
+    'Eres una médica nutricionista experta en resolver imprevistos culinarios de forma práctica, saludable y rápida.',
+    600
+  );
+
+  const cleanJson = rawText.replace(/```json/gi, '').replace(/```/g, '').trim();
+
+  try {
+    const parsed = JSON.parse(cleanJson);
+    return {
+      newMeal: {
+        ...currentMeal,
+        name: parsed.name || currentMeal.name,
+        description: parsed.description || currentMeal.description,
+        tips: parsed.tips || currentMeal.tips,
+      },
+      explanation:
+        parsed.explanation || '¡Comida adaptada con éxito con los ingredientes que tienes a mano!',
+    };
+  } catch (e) {
+    throw new Error('No se pudo generar la sustitución. Intenta detallar qué alimentos tienes.');
+  }
+}

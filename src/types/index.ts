@@ -20,6 +20,8 @@ export interface MealItem {
   type: 'desayuno' | 'media_manana' | 'almuerzo' | 'merienda' | 'cena' | 'otro';
   description: string; // alimentos, ingredientes, porciones
   tips?: string; // consejos adicionales
+  alternatives?: string[]; // alimentos de reemplazo rápido equivalente
+  dayOfWeek?: 'lunes' | 'martes' | 'miercoles' | 'jueves' | 'viernes' | 'sabado' | 'domingo';
   completedToday?: boolean;
   completedAt?: string;
 }
@@ -32,6 +34,7 @@ export interface MealPlan {
   summary?: string;
   dailyCaloriesEstimate?: number;
   meals: MealItem[];
+  weeklyMeals?: Record<string, MealItem[]>; // Plan organizado por días de la semana
   updatedAt: string;
 }
 

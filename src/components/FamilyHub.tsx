@@ -14,7 +14,7 @@ interface FamilyHubProps {
   onSendReaction: (type: 'aplauso' | 'corazon' | 'fuerza' | 'felicitacion', message: string) => void;
 }
 
-const AVATAR_OPTIONS = ['👨‍🦳', '👩‍🦳', '🧔', '👩', '👦', '👧', '👴', '👵', '💪', '🥗'];
+const AVATAR_OPTIONS = ['🏃', '🥑', '🥗', '💪', '🧘', '⚡', '🚴', '🍎', '👨‍🦳', '👩‍🦰', '🧔', '🎯'];
 
 export default function FamilyHub({
   currentProfile,
@@ -26,7 +26,7 @@ export default function FamilyHub({
 }: FamilyHubProps) {
   const [showNewUserModal, setShowNewUserModal] = useState(false);
   const [name, setName] = useState('');
-  const [avatar, setAvatar] = useState('👨‍🦳');
+  const [avatar, setAvatar] = useState('🏃');
   const [pin, setPin] = useState('1234');
   const [initialWeight, setInitialWeight] = useState(80);
   const [targetWeight, setTargetWeight] = useState(72);
@@ -73,8 +73,8 @@ export default function FamilyHub({
             <Users className="w-7 h-7" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-white tracking-tight">Comunidad Familiar</h2>
-            <p className="text-sm text-slate-400">Apoyo y motivación mutua</p>
+            <h2 className="text-2xl font-bold text-white tracking-tight">Círculo de Apoyo & Retos</h2>
+            <p className="text-sm text-slate-400">Motivación y constancia compartida</p>
           </div>
         </div>
 
@@ -83,14 +83,14 @@ export default function FamilyHub({
           className="flex items-center gap-1.5 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-xl border border-slate-700 transition-colors"
         >
           <Plus className="w-4 h-4 text-emerald-400" />
-          <span>Agregar Familiar</span>
+          <span>Agregar Perfil</span>
         </button>
       </div>
 
-      {/* Lista de Miembros Familiares */}
+      {/* Lista de Miembros / Compañeros */}
       <div className="mb-6">
         <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">
-          Perfiles de la Familia
+          Compañeros de Reto
         </label>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {profiles.map((p) => {
@@ -109,7 +109,7 @@ export default function FamilyHub({
                 <div className="overflow-hidden">
                   <div className="flex items-center gap-1">
                     <span className="font-bold text-sm text-white truncate">{p.name}</span>
-                    {p.isMainUser && <span className="text-xs text-amber-400" title="Papá">⭐</span>}
+                    {p.isMainUser && <span className="text-xs text-amber-400" title="Principal">⭐</span>}
                   </div>
                   <span className="text-xs text-slate-400 block truncate">
                     {p.currentWeightKg} kg ➔ {p.targetWeightKg} kg
@@ -121,7 +121,7 @@ export default function FamilyHub({
         </div>
       </div>
 
-      {/* Reacciones Rápidas de Ánimo para Papá */}
+      {/* Reacciones Rápidas de Ánimo */}
       <div className="bg-slate-950/60 p-4 rounded-2xl border border-slate-800/80 mb-6">
         <span className="text-xs font-bold text-slate-300 block mb-2">
           Enviar Ánimo a {currentProfile.name}
@@ -137,15 +137,15 @@ export default function FamilyHub({
           </button>
 
           <button
-            onClick={() => handleQuickReaction('corazon', '¡Te queremos mucho y estamos orgullosos! ❤️')}
+            onClick={() => handleQuickReaction('corazon', '¡Vamos con todo por esa meta! ❤️')}
             className="flex flex-col items-center justify-center p-3 rounded-xl bg-slate-900 border border-slate-800 hover:border-rose-500/50 hover:bg-slate-800 active:scale-95 transition-all"
           >
             <span className="text-2xl mb-1">❤️</span>
-            <span className="text-[10px] font-bold text-slate-300">Cariño</span>
+            <span className="text-[10px] font-bold text-slate-300">Ánimo</span>
           </button>
 
           <button
-            onClick={() => handleQuickReaction('fuerza', '¡Con toda la fuerza, si se puede! 💪')}
+            onClick={() => handleQuickReaction('fuerza', '¡Con toda la fuerza, sí se puede! 💪')}
             className="flex flex-col items-center justify-center p-3 rounded-xl bg-slate-900 border border-slate-800 hover:border-emerald-500/50 hover:bg-slate-800 active:scale-95 transition-all"
           >
             <span className="text-2xl mb-1">💪</span>
@@ -153,7 +153,7 @@ export default function FamilyHub({
           </button>
 
           <button
-            onClick={() => handleQuickReaction('felicitacion', '¡Gran avance en tus metas! 🏆')}
+            onClick={() => handleQuickReaction('felicitacion', '¡Gran constancia con tus hábitos! 🏆')}
             className="flex flex-col items-center justify-center p-3 rounded-xl bg-slate-900 border border-slate-800 hover:border-yellow-500/50 hover:bg-slate-800 active:scale-95 transition-all"
           >
             <span className="text-2xl mb-1">🏆</span>
@@ -170,7 +170,7 @@ export default function FamilyHub({
             className="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-pink-500"
           />
           <button
-            onClick={() => handleQuickReaction('corazon', customMsg || '¡Te queremos!')}
+            onClick={() => handleQuickReaction('corazon', customMsg || '¡Sigue adelante con tu meta!')}
             disabled={!customMsg.trim()}
             className="px-4 py-2 bg-pink-600 hover:bg-pink-500 disabled:opacity-40 text-white rounded-xl text-xs font-bold transition-colors"
           >
@@ -205,13 +205,13 @@ export default function FamilyHub({
         </div>
       </div>
 
-      {/* Modal Agregar Familiar (Sin necesidad de correo) */}
+      {/* Modal Agregar Nuevo Perfil */}
       {showNewUserModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
           <div className="bg-slate-900 border border-slate-700 w-full max-w-md rounded-3xl p-6 shadow-2xl">
-            <h3 className="text-2xl font-bold text-white mb-1">Nuevo Familiar</h3>
+            <h3 className="text-2xl font-bold text-white mb-1">Nuevo Perfil</h3>
             <p className="text-xs text-slate-400 mb-5">
-              Sin registros molestos ni correos requeridos.
+              Sin registros largos ni contraseñas. Solo nombre y PIN de 4 dígitos.
             </p>
 
             <form onSubmit={handleCreate} className="space-y-4">
@@ -220,7 +220,7 @@ export default function FamilyHub({
                 <input
                   type="text"
                   required
-                  placeholder="Ej: Mamá, Hermano Carlos, etc."
+                  placeholder="Ej: Andrés, Carlos, Laura..."
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500"
@@ -277,11 +277,12 @@ export default function FamilyHub({
                 <label className="text-xs font-bold text-slate-300 block mb-1">PIN de Seguridad (4 dígitos)</label>
                 <input
                   type="password"
-                  maxLength={6}
+                  maxLength={4}
+                  required
                   placeholder="1234"
                   value={pin}
-                  onChange={(e) => setPin(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500"
+                  onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-center font-mono tracking-widest text-white focus:outline-none focus:border-emerald-500"
                 />
               </div>
 

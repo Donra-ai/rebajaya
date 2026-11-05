@@ -9,7 +9,7 @@ export interface UserProfile {
   currentWeightKg: number;
   targetWeightKg: number;
   dailyWaterTargetMl: number;
-  isMainUser?: boolean; // ej: Papá como usuario destacado
+  isMainUser?: boolean; // Usuario principal o administrador
   createdAt: string;
 }
 

@@ -1,11 +1,11 @@
 -- ESQUEMA DE BASE DE DATOS PARA REBAJAYA (SUPABASE)
 -- Puedes copiar y pegar este script en el SQL Editor de tu proyecto en Supabase
 
--- 1. Tabla de Perfiles Familiares
+-- 1. Tabla de Perfiles de Usuario
 CREATE TABLE IF NOT EXISTS public.profiles (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
-  avatar TEXT NOT NULL DEFAULT '👨‍🦳',
+  avatar TEXT NOT NULL DEFAULT '🏃',
   pin TEXT NOT NULL,
   age INTEGER,
   height_cm NUMERIC,

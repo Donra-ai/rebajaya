@@ -269,7 +269,7 @@ export default function WaterTracker3D({
         </div>
       </div>
 
-      {/* Botones de acción gigantes pensados para tu papá */}
+      {/* Botones de acción rápida para hidratación */}
       <div className="mt-4 grid grid-cols-2 gap-3">
         <button
           onClick={() => handleAdd(250)}

@@ -25,7 +25,8 @@ import WeightProgress from '@/components/WeightProgress';
 import FamilyHub from '@/components/FamilyHub';
 import AiDietGenerator from '@/components/AiDietGenerator';
 import PwaInstallPrompt from '@/components/PwaInstallPrompt';
-import { Sparkles, Calendar, Bell, ChevronDown, CheckCircle, ShieldCheck } from 'lucide-react';
+import AuthScreen from '@/components/AuthScreen';
+import { Sparkles, Calendar, Lock, ChevronDown, CheckCircle, LogOut } from 'lucide-react';
 
 export default function HomePage() {
   const [profiles, setProfiles] = useState<UserProfile[]>([]);
@@ -39,6 +40,7 @@ export default function HomePage() {
   const [activeTab, setActiveTab] = useState<'hoy' | 'comunidad' | 'peso'>('hoy');
   const [todayStr, setTodayStr] = useState<string>('');
   const [dateFormatted, setDateFormatted] = useState<string>('');
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   // Carga inicial de datos
   useEffect(() => {
@@ -54,14 +56,15 @@ export default function HomePage() {
     setDateFormatted(formatted);
 
     async function loadData() {
+      setIsLoading(true);
       const allProfiles = await getProfiles();
       setProfiles(allProfiles);
 
       const activeId = getActiveProfileId();
-      const current = allProfiles.find((p) => p.id === activeId) || allProfiles[0];
-      setActiveProfile(current);
+      const current = activeId ? allProfiles.find((p) => p.id === activeId) || null : null;
 
       if (current) {
+        setActiveProfile(current);
         const plan = await getMealPlan(current.id);
         setMealPlan(plan);
 
@@ -73,21 +76,22 @@ export default function HomePage() {
 
         const history = await getWeightHistory(current.id);
         setWeightHistory(history);
+      } else {
+        setActiveProfile(null);
       }
 
       setReactions(getReactions());
+      setIsLoading(false);
     }
 
     loadData();
   }, []);
 
-  // Cambiar de perfil activo
-  const handleSelectProfile = async (profileId: string) => {
-    setActiveProfileId(profileId);
-    const target = profiles.find((p) => p.id === profileId);
-    if (!target) return;
-
+  // Iniciar sesión con un perfil (tras verificar PIN en AuthScreen)
+  const handleLoginProfile = async (target: UserProfile) => {
+    setActiveProfileId(target.id);
     setActiveProfile(target);
+
     const plan = await getMealPlan(target.id);
     setMealPlan(plan);
 
@@ -101,12 +105,26 @@ export default function HomePage() {
     setWeightHistory(history);
   };
 
-  // Crear nuevo familiar
+  // Cerrar sesión o cambiar de perfil
+  const handleLogout = () => {
+    setActiveProfileId(null);
+    setActiveProfile(null);
+    setMealPlan(null);
+  };
+
+  // Cambiar de perfil desde la vista de comunidad
+  const handleSelectProfile = async (profileId: string) => {
+    const target = profiles.find((p) => p.id === profileId);
+    if (!target) return;
+    handleLoginProfile(target);
+  };
+
+  // Crear nuevo perfil
   const handleCreateProfile = async (newProfile: UserProfile) => {
     await saveProfile(newProfile);
     const updated = await getProfiles();
     setProfiles(updated);
-    handleSelectProfile(newProfile.id);
+    await handleLoginProfile(newProfile);
   };
 
   // Marcar/Desmarcar comida
@@ -150,14 +168,14 @@ export default function HomePage() {
     setMealPlan(newPlan);
   };
 
-  // Enviar apoyo / reacción familiar
+  // Enviar apoyo / reacción
   const handleSendReaction = async (
     type: 'aplauso' | 'corazon' | 'fuerza' | 'felicitacion',
     message: string
   ) => {
     if (!activeProfile) return;
     await addReaction({
-      senderName: activeProfile.name === 'Papá' ? 'Familiar' : activeProfile.name,
+      senderName: activeProfile.name,
       senderAvatar: activeProfile.avatar,
       receiverId: activeProfile.id,
       type,
@@ -166,7 +184,7 @@ export default function HomePage() {
     setReactions(getReactions());
   };
 
-  if (!activeProfile || !mealPlan) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center">
         <div className="text-center">
@@ -177,9 +195,20 @@ export default function HomePage() {
     );
   }
 
+  // Si no hay perfil activo, mostrar la pantalla de autenticación por PIN / Onboarding
+  if (!activeProfile || !mealPlan) {
+    return (
+      <AuthScreen
+        profiles={profiles}
+        onSelectProfile={handleLoginProfile}
+        onCreateProfile={handleCreateProfile}
+      />
+    );
+  }
+
   return (
     <main className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-white pb-20">
-      {/* Barra Superior con Selector de Perfil Familiar */}
+      {/* Barra Superior con Selector de Perfil */}
       <header className="sticky top-0 z-40 bg-slate-950/80 backdrop-blur-xl border-b border-slate-800">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
           {/* Logo */}
@@ -192,30 +221,33 @@ export default function HomePage() {
                 Rebaja<span className="text-cyan-400">YA</span>
               </span>
               <span className="text-[10px] text-slate-400 block -mt-1 font-semibold uppercase tracking-wider">
-                Salud & Dieta Familiar
+                Nutrición & Hábitos Diarios
               </span>
             </div>
           </div>
 
-          {/* Selector de Perfil Rápido */}
+          {/* Perfil Activo y Botón de Bloqueo / Cambio de Usuario */}
           <div className="flex items-center gap-2">
-            <div className="relative">
-              <select
-                value={activeProfile.id}
-                onChange={(e) => handleSelectProfile(e.target.value)}
-                className="appearance-none bg-slate-900 border border-slate-700 text-white text-sm font-bold py-2 pl-9 pr-8 rounded-2xl cursor-pointer hover:border-cyan-500 focus:outline-none focus:border-cyan-500 transition-colors"
-              >
-                {profiles.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name} {p.isMainUser ? '(Papá)' : ''}
-                  </option>
-                ))}
-              </select>
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-lg pointer-events-none">
-                {activeProfile.avatar}
-              </span>
-              <ChevronDown className="w-4 h-4 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-2xl">
+              <span className="text-xl">{activeProfile.avatar}</span>
+              <div className="hidden sm:block text-left">
+                <span className="text-xs font-bold text-white block truncate max-w-[120px]">
+                  {activeProfile.name}
+                </span>
+                <span className="text-[10px] text-cyan-400 block -mt-0.5">
+                  Meta: {activeProfile.targetWeightKg} kg
+                </span>
+              </div>
             </div>
+
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-1.5 px-3 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-white rounded-2xl text-xs font-bold transition-all active:scale-95"
+              title="Cambiar de usuario o bloquear sesión con PIN"
+            >
+              <Lock className="w-3.5 h-3.5 text-cyan-400" />
+              <span className="hidden sm:inline">Cambiar</span>
+            </button>
           </div>
         </div>
       </header>
@@ -280,7 +312,7 @@ export default function HomePage() {
                 : 'text-slate-400'
             }`}
           >
-            Familia
+            Comunidad
           </button>
         </div>
 
@@ -312,7 +344,7 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Columna Derecha: Cronograma de Dieta + Muro Familiar */}
+          {/* Columna Derecha: Cronograma de Dieta + Círculo de Apoyo */}
           <div
             className={`lg:col-span-7 space-y-6 ${
               activeTab === 'hoy' || activeTab === 'comunidad' ? 'block' : 'hidden sm:block'
@@ -328,7 +360,7 @@ export default function HomePage() {
               />
             </div>
 
-            {/* Muro Familiar y Apoyo Mutuo */}
+            {/* Círculo de Apoyo y Motivación Compartida */}
             <div className={activeTab === 'hoy' ? 'hidden sm:block' : 'block'}>
               <FamilyHub
                 currentProfile={activeProfile}

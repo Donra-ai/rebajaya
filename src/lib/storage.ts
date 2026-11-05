@@ -9,74 +9,59 @@ const WATER_LOGS_KEY = 'rebajaya_water_logs';
 const WEIGHT_LOGS_KEY = 'rebajaya_weight_logs';
 const REACTIONS_KEY = 'rebajaya_reactions';
 
-const DEFAULT_PAPA_ID = 'profile-papa-1';
-
-const DEFAULT_PAPA_PROFILE: UserProfile = {
-  id: DEFAULT_PAPA_ID,
-  name: 'Papá',
-  avatar: '👨‍🦳',
-  pin: '1234',
-  age: 62,
-  heightCm: 172,
-  initialWeightKg: 88.5,
-  currentWeightKg: 86.2,
-  targetWeightKg: 78.0,
-  dailyWaterTargetMl: 2000,
-  isMainUser: true,
-  createdAt: '2026-01-01T00:00:00.000Z',
-};
-
-const DEFAULT_PAPA_PLAN: MealPlan = {
-  id: 'plan-papa-1',
-  profileId: DEFAULT_PAPA_ID,
-  source: 'pdf',
-  title: 'Plan Nutricional Reductivo (Nutricionista)',
-  summary: 'Plan bajo en azúcares refinados y alto en fibra para salud cardiovascular y pérdida progresiva de peso.',
-  dailyCaloriesEstimate: 1800,
-  updatedAt: '2026-01-01T00:00:00.000Z',
-  meals: [
-    {
-      id: 'm1',
-      name: 'Desayuno Saludable',
-      time: '08:00',
-      type: 'desayuno',
-      description: '2 huevos revueltos con espinacas + 1 rebanada de pan integral tostado + Café o té verde sin azúcar.',
-      tips: 'Tomar 1 vaso de agua antes de desayunar.',
-    },
-    {
-      id: 'm2',
-      name: 'Colación de Media Mañana',
-      time: '11:00',
-      type: 'media_manana',
-      description: '1 manzana verde o puñado de almendras (8-10 unidades).',
-      tips: 'Excelente para mantener la energía estable.',
-    },
-    {
-      id: 'm3',
-      name: 'Almuerzo Equilibrado',
-      time: '13:30',
-      type: 'almuerzo',
-      description: 'Pechuga de pollo a la plancha (150g) + abundante ensalada verde con aceite de oliva y limón + 1/2 taza de arroz integral o quinoa.',
-      tips: 'Masticar despacio y descansar entre bocados.',
-    },
-    {
-      id: 'm4',
-      name: 'Merienda de la Tarde',
-      time: '17:00',
-      type: 'merienda',
-      description: 'Yogurt griego natural sin azúcar + 1 cucharadita de semillas de chía o rodajas de pepino con limón.',
-      tips: 'Acompañar con un vaso grande de agua fresca.',
-    },
-    {
-      id: 'm5',
-      name: 'Cena Ligera',
-      time: '20:00',
-      type: 'cena',
-      description: 'Sopa de verduras con trocitos de pescado blanco o ensalada de atún al agua con tomate y aguacate.',
-      tips: 'Cenar al menos 2 horas antes de dormir para mejorar la digestión.',
-    },
-  ],
-};
+export function createDefaultMealPlan(profileId: string, title = 'Plan Nutricional Balanceado'): MealPlan {
+  return {
+    id: `plan-${profileId}-${Date.now()}`,
+    profileId,
+    source: 'manual',
+    title,
+    summary: 'Plan equilibrado de alimentación saludable, energía constante e hidratación.',
+    dailyCaloriesEstimate: 1800,
+    updatedAt: new Date().toISOString(),
+    meals: [
+      {
+        id: 'm1',
+        name: 'Desayuno Saludable',
+        time: '08:00',
+        type: 'desayuno',
+        description: '2 huevos al gusto con verduras o avena con frutas y semillas + Café o infusión sin azúcar.',
+        tips: 'Tomar 1 vaso de agua antes de desayunar.',
+      },
+      {
+        id: 'm2',
+        name: 'Colación de Media Mañana',
+        time: '11:00',
+        type: 'media_manana',
+        description: '1 fruta fresca de temporada o puñado de frutos secos (8-10 almendras o nueces).',
+        tips: 'Excelente para mantener los niveles de energía estables.',
+      },
+      {
+        id: 'm3',
+        name: 'Almuerzo Equilibrado',
+        time: '13:30',
+        type: 'almuerzo',
+        description: 'Proteína magra a la plancha (pollo, pescado o legumbres) + ensalada verde variada + carbohidrato complejo.',
+        tips: 'Masticar con calma y descansar entre bocados.',
+      },
+      {
+        id: 'm4',
+        name: 'Merienda de la Tarde',
+        time: '17:00',
+        type: 'merienda',
+        description: 'Yogurt natural sin azúcar con semillas de chía o rodajas de pepino y limón.',
+        tips: 'Acompañar con un vaso grande de agua fresca.',
+      },
+      {
+        id: 'm5',
+        name: 'Cena Ligera',
+        time: '20:00',
+        type: 'cena',
+        description: 'Cena digestiva: ensalada proteica ligera o sopa de verduras casera.',
+        tips: 'Cenar al menos 2 horas antes de dormir para mejorar el descanso.',
+      },
+    ],
+  };
+}
 
 function getLocal<T>(key: string, fallback: T): T {
   if (typeof window === 'undefined') return fallback;
@@ -99,11 +84,7 @@ function setLocal<T>(key: string, value: T): void {
 
 // ---------------- PROFILES ----------------
 export async function getProfiles(): Promise<UserProfile[]> {
-  const local = getLocal<UserProfile[]>(PROFILES_KEY, [DEFAULT_PAPA_PROFILE]);
-  if (!local.length) {
-    local.push(DEFAULT_PAPA_PROFILE);
-    setLocal(PROFILES_KEY, local);
-  }
+  const local = getLocal<UserProfile[]>(PROFILES_KEY, []);
 
   if (isSupabaseConfigured && supabase) {
     try {
@@ -165,28 +146,26 @@ export async function saveProfile(profile: UserProfile): Promise<void> {
   }
 }
 
-export function getActiveProfileId(): string {
-  return getLocal<string>(ACTIVE_PROFILE_KEY, DEFAULT_PAPA_ID);
+export function getActiveProfileId(): string | null {
+  return getLocal<string | null>(ACTIVE_PROFILE_KEY, null);
 }
 
-export function setActiveProfileId(id: string): void {
-  setLocal(ACTIVE_PROFILE_KEY, id);
+export function setActiveProfileId(id: string | null): void {
+  if (id === null) {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(ACTIVE_PROFILE_KEY);
+    }
+  } else {
+    setLocal(ACTIVE_PROFILE_KEY, id);
+  }
 }
 
 // ---------------- MEAL PLANS ----------------
 export async function getMealPlan(profileId: string): Promise<MealPlan> {
-  const plans = getLocal<Record<string, MealPlan>>(MEAL_PLANS_KEY, {
-    [DEFAULT_PAPA_ID]: DEFAULT_PAPA_PLAN,
-  });
+  const plans = getLocal<Record<string, MealPlan>>(MEAL_PLANS_KEY, {});
 
   if (!plans[profileId]) {
-    // Si no tiene plan, retornar una plantilla base o el predeterminado
-    const newPlan: MealPlan = {
-      ...DEFAULT_PAPA_PLAN,
-      id: `plan-${profileId}`,
-      profileId,
-      title: 'Plan Personalizado',
-    };
+    const newPlan = createDefaultMealPlan(profileId);
     plans[profileId] = newPlan;
     setLocal(MEAL_PLANS_KEY, plans);
   }
@@ -404,25 +383,25 @@ export async function addWeight(profileId: string, weightKg: number, notes?: str
   }
 }
 
-// ---------------- FAMILY HUB & REACTIONS ----------------
+// ---------------- COMMUNITY HUB & REACTIONS ----------------
 export function getReactions(): FamilyReaction[] {
   const local = getLocal<FamilyReaction[]>(REACTIONS_KEY, [
     {
       id: 'r1',
-      senderName: 'Hijo',
+      senderName: 'Compañero',
       senderAvatar: '💪',
-      receiverId: DEFAULT_PAPA_ID,
+      receiverId: 'global',
       type: 'aplauso',
-      message: '¡Excelente papá, sigue así con el agua!',
+      message: '¡Excelente disciplina hoy, sigue así con tu meta!',
       timestamp: new Date(Date.now() - 3600000).toISOString(),
     },
     {
       id: 'r2',
-      senderName: 'María',
-      senderAvatar: '🌸',
-      receiverId: DEFAULT_PAPA_ID,
+      senderName: 'Amigo',
+      senderAvatar: '⭐',
+      receiverId: 'global',
       type: 'corazon',
-      message: '¡Qué buen almuerzo preparaste!',
+      message: '¡Gran constancia con los hábitos saludables!',
       timestamp: new Date(Date.now() - 7200000).toISOString(),
     },
   ]);

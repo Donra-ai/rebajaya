@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'RebajaYA - Salud & Dieta Familiar',
-  description: 'Aplicación guiada de salud, nutrición e hidratación con IA para tu familia.',
+  title: 'RebajaYA - Control Nutricional, Hábitos & Peso',
+  description: 'Aplicación guiada de salud, nutrición e hidratación con IA para alcanzar tus metas.',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,

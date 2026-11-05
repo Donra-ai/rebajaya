@@ -146,7 +146,7 @@ export default function WeightProgress({
         </div>
       </div>
 
-      {/* Modal / Selector Gigante de Peso para Papá */}
+      {/* Modal / Selector Rápido de Peso */}
       {showLogModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
           <div className="bg-slate-900 border border-slate-700 w-full max-w-md rounded-3xl p-6 shadow-2xl animate-in fade-in zoom-in-95">

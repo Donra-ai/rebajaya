@@ -8,7 +8,7 @@ interface AiDietGeneratorProps {
   profile: UserProfile;
   isOpen: boolean;
   onClose: () => void;
-  onPlanCreated: (plan: MealPlan) => void;
+  onPlanCreated: (plan: MealPlan, updatedProfile?: Partial<UserProfile>) => void;
 }
 
 export default function AiDietGenerator({
@@ -23,13 +23,18 @@ export default function AiDietGenerator({
   const [file, setFile] = useState<File | null>(null);
   const [isProcessingPdf, setIsProcessingPdf] = useState(false);
   const [pdfError, setPdfError] = useState<string | null>(null);
-  const [previewPlan, setPreviewPlan] = useState<Partial<MealPlan> | null>(null);
+  const [previewPlan, setPreviewPlan] = useState<Partial<MealPlan & { suggestedTargetWeightKg?: number; dailyWaterTargetMl?: number }> | null>(null);
+
+  // Cálculo de peso saludable de referencia
+  const heightM = (profile.heightCm || 170) / 100;
+  const minW = Math.round(20 * heightM * heightM);
+  const maxW = Math.round(24.9 * heightM * heightM);
 
   // Estado Modo Chat Nutricionista
   const [chatMessages, setChatMessages] = useState<Array<{ role: 'user' | 'assistant'; content: string }>>([
     {
       role: 'assistant',
-      content: `¡Hola ${profile.name}! 👋 Soy tu Nutricionista Virtual de RebajaYA. Mi objetivo es armar un menú delicioso y adaptado a tus gustos para ayudarte a llegar a tu meta de ${profile.targetWeightKg} kg. Para empezar, ¿a qué hora sueles levantarte y a qué hora te acuestas normalmente?`,
+      content: `¡Hola, ${profile.name}! 👋 Soy la Dra. Lucía, tu Nutricionista Clínica en RebajaYA.\n\nPara tu estatura de ${profile.heightCm || 170} cm, la medicina suele situar el rango de peso saludable de menor riesgo metabólico entre los **${minW} kg y ${maxW} kg**. Sin embargo, **la meta la decides 100% tú**, pues lo prioritario es cómo te sientas con tu energía y bienestar. Tu meta actual está fijada en **${profile.targetWeightKg} kg**.\n\nPara diseñar tu plan médico personalizado sin pasar hambre ni sufrir rebote, cuéntame: **¿Tienes alguna condición médica que debamos cuidar (como resistencia a la insulina, tiroides, hipertensión o gastritis)? ¿Y a qué hora sueles despertar y acostarte?**`,
     },
   ]);
   const [userInput, setUserInput] = useState('');
@@ -106,6 +111,8 @@ export default function AiDietGenerator({
           messages: cleanHistory,
           userProfile: {
             name: profile.name,
+            age: profile.age || 30,
+            heightCm: profile.heightCm || 170,
             weightKg: profile.currentWeightKg,
             targetKg: profile.targetWeightKg,
           },
@@ -150,7 +157,15 @@ export default function AiDietGenerator({
       updatedAt: new Date().toISOString(),
     };
 
-    onPlanCreated(finalPlan);
+    const updatedProfile: Partial<UserProfile> = {};
+    if (previewPlan.suggestedTargetWeightKg && previewPlan.suggestedTargetWeightKg > 0) {
+      updatedProfile.targetWeightKg = previewPlan.suggestedTargetWeightKg;
+    }
+    if (previewPlan.dailyWaterTargetMl && previewPlan.dailyWaterTargetMl > 0) {
+      updatedProfile.dailyWaterTargetMl = previewPlan.dailyWaterTargetMl;
+    }
+
+    onPlanCreated(finalPlan, Object.keys(updatedProfile).length > 0 ? updatedProfile : undefined);
     onClose();
   };
 
@@ -316,11 +331,30 @@ export default function AiDietGenerator({
                 <span>Plan Listo: {previewPlan.title}</span>
               </h4>
               <span className="text-xs bg-emerald-500/20 text-emerald-300 px-3 py-1 rounded-full font-bold">
-                {previewPlan.meals.length} comidas detectadas
+                {previewPlan.meals.length} comidas
               </span>
             </div>
 
-            <p className="text-xs text-slate-400 mb-4">{previewPlan.summary}</p>
+            {/* Badges de Métricas Clínicas */}
+            <div className="flex flex-wrap gap-2 mb-3">
+              {previewPlan.dailyCaloriesEstimate && (
+                <span className="text-[11px] bg-slate-800 text-slate-200 border border-slate-700 px-2.5 py-1 rounded-xl font-bold">
+                  🔥 {previewPlan.dailyCaloriesEstimate} kcal / día
+                </span>
+              )}
+              {previewPlan.suggestedTargetWeightKg && (
+                <span className="text-[11px] bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 px-2.5 py-1 rounded-xl font-bold">
+                  🎯 Meta: {previewPlan.suggestedTargetWeightKg} kg
+                </span>
+              )}
+              {previewPlan.dailyWaterTargetMl && (
+                <span className="text-[11px] bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 px-2.5 py-1 rounded-xl font-bold">
+                  💧 Agua: {previewPlan.dailyWaterTargetMl} ml
+                </span>
+              )}
+            </div>
+
+            <p className="text-xs text-slate-300 leading-relaxed mb-4">{previewPlan.summary}</p>
 
             <div className="max-h-56 overflow-y-auto space-y-2 pr-1 mb-4">
               {previewPlan.meals.map((m, i) => (

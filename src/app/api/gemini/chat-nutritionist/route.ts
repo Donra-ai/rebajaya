@@ -11,7 +11,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Se requiere una lista de mensajes válida' }, { status: 400 });
     }
 
-    const result = await chatNutritionist(messages, userProfile || { name: 'Usuario', weightKg: 80, targetKg: 70 });
+    const result = await chatNutritionist(
+      messages,
+      userProfile || { name: 'Usuario', weightKg: 80, targetKg: 70, heightCm: 170, age: 30 }
+    );
 
     return NextResponse.json({ success: true, ...result });
   } catch (error: any) {

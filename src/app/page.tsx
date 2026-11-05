@@ -163,9 +163,15 @@ export default function HomePage() {
   };
 
   // Nuevo plan aplicado desde IA / PDF
-  const handlePlanCreated = async (newPlan: MealPlan) => {
+  const handlePlanCreated = async (newPlan: MealPlan, updatedProfileData?: Partial<UserProfile>) => {
     await saveMealPlan(newPlan);
     setMealPlan(newPlan);
+
+    if (updatedProfileData && activeProfile) {
+      const merged: UserProfile = { ...activeProfile, ...updatedProfileData };
+      await saveProfile(merged);
+      setActiveProfile(merged);
+    }
   };
 
   // Enviar apoyo / reacción

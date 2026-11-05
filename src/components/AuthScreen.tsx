@@ -39,10 +39,10 @@ export default function AuthScreen({
   const [age, setAge] = useState<number>(30);
   const [createError, setCreateError] = useState<string>('');
 
-  // Cálculo automático de agua basado en hidratación científica (~35 ml por kg de peso corporal)
+  // Cálculo automático de agua basado en hidratación científica (~30 ml por kg de peso corporal)
   const calculatedWater = Math.max(
-    1750,
-    Math.round(((Number(currentWeight) || 75) * 35) / 250) * 250
+    1500,
+    Math.round(((Number(currentWeight) || 75) * 30) / 250) * 250
   );
 
   // Si no hay perfiles, forzar vista de creación
@@ -459,7 +459,7 @@ export default function AuthScreen({
                     </span>
                   </div>
                   <p className="text-[11px] text-slate-400 mt-0.5 leading-tight">
-                    Calculada automáticamente por la IA para tu peso corporal. Tu Nutricionista IA la adaptará.
+                    Calculada automáticamente por la IA para tu peso corporal (~30 ml por kg). Tu Nutricionista IA la adaptará.
                   </p>
                 </div>
               </div>

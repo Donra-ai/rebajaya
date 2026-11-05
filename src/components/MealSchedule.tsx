@@ -20,6 +20,7 @@ import {
   HelpCircle,
   Volume2,
   VolumeX,
+  Pencil,
 } from 'lucide-react';
 
 interface MealScheduleProps {
@@ -124,6 +125,11 @@ export default function MealSchedule({
   // Estados para modal de lista de compras
   const [showGroceryModal, setShowGroceryModal] = useState(false);
   const [checkedGroceries, setCheckedGroceries] = useState<Record<string, boolean>>({});
+
+  // Estados para modal de cambio de horario de comida
+  const [editingTimeMeal, setEditingTimeMeal] = useState<MealItem | null>(null);
+  const [newMealTime, setNewMealTime] = useState<string>('08:00');
+  const [applyTimeToAllWeek, setApplyTimeToAllWeek] = useState<boolean>(false);
 
   // Estado para lectura con voz (Web Speech API)
   const [speakingMealId, setSpeakingMealId] = useState<string | null>(null);
@@ -270,6 +276,80 @@ export default function MealSchedule({
     };
     onUpdatePlan(updatedPlan);
     confetti({ particleCount: 50, spread: 70, origin: { y: 0.6 } });
+  };
+
+  // Ajustar minutos con botones rápidos (-30m, +15m, etc.)
+  const adjustMinutes = (timeStr: string, deltaMinutes: number): string => {
+    const [hStr, mStr] = (timeStr || '08:00').split(':');
+    const h = parseInt(hStr, 10) || 0;
+    const m = parseInt(mStr, 10) || 0;
+    const totalMinutes = h * 60 + m + deltaMinutes;
+    const normalized = ((totalMinutes % 1440) + 1440) % 1440;
+    const newH = Math.floor(normalized / 60);
+    const newM = normalized % 60;
+    return `${String(newH).padStart(2, '0')}:${String(newM).padStart(2, '0')}`;
+  };
+
+  // Guardar cambio de hora de una comida
+  const handleSaveMealTime = () => {
+    if (!editingTimeMeal || !newMealTime || !onUpdatePlan || !plan) return;
+
+    const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
+    const formattedTime = newMealTime.trim();
+    if (!timeRegex.test(formattedTime)) {
+      alert('Por favor selecciona una hora válida en formato HH:MM (ej. 08:30).');
+      return;
+    }
+
+    let updatedWeeklyMeals: Record<string, MealItem[]> | undefined = plan.weeklyMeals
+      ? JSON.parse(JSON.stringify(plan.weeklyMeals))
+      : undefined;
+    let updatedMeals: MealItem[] = plan.meals ? JSON.parse(JSON.stringify(plan.meals)) : [];
+
+    if (applyTimeToAllWeek) {
+      const targetType = editingTimeMeal.type;
+
+      // Actualizar en todos los días de la semana
+      if (updatedWeeklyMeals) {
+        DAYS_OF_WEEK.forEach((d) => {
+          if (updatedWeeklyMeals && updatedWeeklyMeals[d.key]) {
+            updatedWeeklyMeals[d.key] = updatedWeeklyMeals[d.key]
+              .map((m) => (m.type === targetType ? { ...m, time: formattedTime } : m))
+              .sort((a, b) => a.time.localeCompare(b.time));
+          }
+        });
+      }
+
+      // Actualizar también en base meals
+      updatedMeals = updatedMeals
+        .map((m) => (m.type === targetType ? { ...m, time: formattedTime } : m))
+        .sort((a, b) => a.time.localeCompare(b.time));
+    } else {
+      // Actualizar solo para el día seleccionado
+      if (updatedWeeklyMeals && updatedWeeklyMeals[selectedDay]) {
+        updatedWeeklyMeals[selectedDay] = updatedWeeklyMeals[selectedDay]
+          .map((m) => (m.id === editingTimeMeal.id ? { ...m, time: formattedTime } : m))
+          .sort((a, b) => a.time.localeCompare(b.time));
+      }
+
+      // Si el día seleccionado es hoy, sincronizar también en plan.meals
+      if (selectedDay === todayKey) {
+        updatedMeals = updatedMeals
+          .map((m) => (m.id === editingTimeMeal.id ? { ...m, time: formattedTime } : m))
+          .sort((a, b) => a.time.localeCompare(b.time));
+      }
+    }
+
+    const updatedPlan: MealPlan = {
+      ...plan,
+      meals: updatedMeals,
+      weeklyMeals: updatedWeeklyMeals,
+      updatedAt: new Date().toISOString(),
+    };
+
+    onUpdatePlan(updatedPlan);
+    setEditingTimeMeal(null);
+    confetti({ particleCount: 35, spread: 50, origin: { y: 0.6 } });
   };
 
   // Determinar ícono y color según tipo de comida
@@ -477,10 +557,20 @@ export default function MealSchedule({
                       {badge.label}
                     </span>
 
-                    <span className="flex items-center gap-1 text-xs font-bold text-amber-400 bg-amber-950/40 px-2.5 py-0.5 rounded-full border border-amber-500/30">
-                      <Clock className="w-3.5 h-3.5" />
-                      {meal.time} hrs
-                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditingTimeMeal(meal);
+                        setNewMealTime(meal.time || '08:00');
+                        setApplyTimeToAllWeek(false);
+                      }}
+                      className="group inline-flex items-center gap-1.5 text-xs font-bold text-amber-300 hover:text-amber-100 bg-amber-950/50 hover:bg-amber-900/70 px-2.5 py-0.5 rounded-full border border-amber-500/30 hover:border-amber-400 transition-all cursor-pointer shadow-sm active:scale-95"
+                      title="Haz clic para modificar la hora de esta comida"
+                    >
+                      <Clock className="w-3.5 h-3.5 text-amber-400 group-hover:scale-110 transition-transform" />
+                      <span>{meal.time} hrs</span>
+                      <Pencil className="w-2.5 h-2.5 text-amber-400/70 group-hover:text-amber-200 opacity-60 group-hover:opacity-100 transition-all ml-0.5" />
+                    </button>
 
                     {isUpcomingOrCurrent && !isDone && (
                       <span className="text-[10px] px-2 py-0.5 rounded-full font-extrabold bg-emerald-500 text-slate-950 animate-bounce">
@@ -737,6 +827,160 @@ export default function MealSchedule({
             >
               Cerrar Lista
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL DE CAMBIO DE HORARIO DE COMIDA */}
+      {editingTimeMeal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in">
+          <div className="bg-slate-900 border border-slate-700 w-full max-w-md rounded-3xl p-6 shadow-2xl relative">
+            <button
+              onClick={() => setEditingTimeMeal(null)}
+              className="absolute top-5 right-5 p-2 rounded-xl bg-slate-800 text-slate-400 hover:text-white transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-2.5 mb-4">
+              <div className="p-2.5 bg-amber-500/20 text-amber-400 rounded-xl">
+                <Clock className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-white">Modificar Horario</h3>
+                <p className="text-xs text-slate-400">
+                  {editingTimeMeal.name}
+                </p>
+              </div>
+            </div>
+
+            {/* Selector de Hora */}
+            <div className="p-4 bg-slate-950/80 border border-slate-800 rounded-2xl mb-4 text-center">
+              <label className="text-xs font-semibold text-slate-400 block mb-2">
+                Selecciona la nueva hora de ingesta
+              </label>
+
+              <div className="inline-flex items-center justify-center bg-slate-900 border border-amber-500/40 rounded-2xl px-5 py-2.5 shadow-inner mb-3">
+                <input
+                  type="time"
+                  value={newMealTime}
+                  onChange={(e) => setNewMealTime(e.target.value)}
+                  className="bg-transparent text-3xl font-black text-amber-300 focus:outline-none tracking-wider cursor-pointer"
+                />
+              </div>
+
+              {/* Botones de ajuste rápido */}
+              <div className="flex items-center justify-center gap-2 mt-1">
+                <button
+                  type="button"
+                  onClick={() => setNewMealTime((prev) => adjustMinutes(prev || '08:00', -30))}
+                  className="px-2.5 py-1 text-[11px] font-bold bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg border border-slate-700 transition-colors active:scale-95"
+                >
+                  -30 min
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setNewMealTime((prev) => adjustMinutes(prev || '08:00', -15))}
+                  className="px-2.5 py-1 text-[11px] font-bold bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg border border-slate-700 transition-colors active:scale-95"
+                >
+                  -15 min
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setNewMealTime((prev) => adjustMinutes(prev || '08:00', +15))}
+                  className="px-2.5 py-1 text-[11px] font-bold bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg border border-slate-700 transition-colors active:scale-95"
+                >
+                  +15 min
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setNewMealTime((prev) => adjustMinutes(prev || '08:00', +30))}
+                  className="px-2.5 py-1 text-[11px] font-bold bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg border border-slate-700 transition-colors active:scale-95"
+                >
+                  +30 min
+                </button>
+              </div>
+            </div>
+
+            {/* Opciones de Alcance (Solo hoy vs toda la semana) */}
+            <div className="space-y-2 mb-5">
+              <label
+                onClick={() => setApplyTimeToAllWeek(false)}
+                className={`flex items-start gap-3 p-3 rounded-2xl border cursor-pointer transition-all ${
+                  !applyTimeToAllWeek
+                    ? 'bg-amber-500/10 border-amber-500/50 text-white'
+                    : 'bg-slate-950/40 border-slate-800 text-slate-400 hover:text-slate-300'
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="timeScope"
+                  checked={!applyTimeToAllWeek}
+                  onChange={() => setApplyTimeToAllWeek(false)}
+                  className="mt-1 w-4 h-4 text-amber-500 bg-slate-900 border-slate-700 focus:ring-amber-500"
+                />
+                <div>
+                  <span className="text-xs font-bold block text-white">
+                    Solo para {DAYS_OF_WEEK.find((d) => d.key === selectedDay)?.full || 'este día'}
+                  </span>
+                  <span className="text-[11px] text-slate-400">
+                    Cambio puntual para este día de la semana.
+                  </span>
+                </div>
+              </label>
+
+              <label
+                onClick={() => setApplyTimeToAllWeek(true)}
+                className={`flex items-start gap-3 p-3 rounded-2xl border cursor-pointer transition-all ${
+                  applyTimeToAllWeek
+                    ? 'bg-amber-500/10 border-amber-500/50 text-white'
+                    : 'bg-slate-950/40 border-slate-800 text-slate-400 hover:text-slate-300'
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="timeScope"
+                  checked={applyTimeToAllWeek}
+                  onChange={() => setApplyTimeToAllWeek(true)}
+                  className="mt-1 w-4 h-4 text-amber-500 bg-slate-900 border-slate-700 focus:ring-amber-500"
+                />
+                <div>
+                  <span className="text-xs font-bold block text-white">
+                    Aplicar a toda la semana (Lun a Dom)
+                  </span>
+                  <span className="text-[11px] text-slate-400">
+                    Ajusta el horario habitual de tu comida para todos los días.
+                  </span>
+                </div>
+              </label>
+            </div>
+
+            {/* Consejo Clínico de Horarios */}
+            <div className="p-3 bg-slate-950/60 border border-slate-800 rounded-xl mb-5 flex items-start gap-2 text-[11px] text-slate-400">
+              <Sparkles className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
+              <span>
+                <strong>Tip de la Dra. Lucía:</strong> Procura dejar un espacio de 2.5 a 3.5 horas entre comidas para permitir una óptima digestión y vaciamiento gástrico.
+              </span>
+            </div>
+
+            {/* Botones de acción */}
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setEditingTimeMeal(null)}
+                className="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs rounded-xl transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveMealTime}
+                className="flex-1 py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-xs rounded-xl shadow-lg shadow-amber-500/20 active:scale-95 transition-all flex items-center justify-center gap-1.5"
+              >
+                <Check className="w-4 h-4 stroke-[3]" />
+                <span>Guardar Horario</span>
+              </button>
+            </div>
           </div>
         </div>
       )}

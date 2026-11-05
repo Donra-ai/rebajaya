@@ -35,7 +35,7 @@ export default function AiDietGenerator({
   const [chatMessages, setChatMessages] = useState<Array<{ role: 'user' | 'assistant'; content: string }>>([
     {
       role: 'assistant',
-      content: `¡Hola, ${profile.name}! 👋 Soy la Dra. Lucía, tu Nutricionista Clínica en RebajaYA.\n\nPara tu estatura de ${profile.heightCm || 170} cm, la medicina suele situar el rango de peso saludable de menor riesgo metabólico entre los **${minW} kg y ${maxW} kg**. Sin embargo, **la meta la decides 100% tú**, pues lo prioritario es cómo te sientas con tu energía y bienestar. Tu meta actual está fijada en **${profile.targetWeightKg} kg**.\n\nPara diseñar tu plan médico personalizado sin pasar hambre ni sufrir rebote, cuéntame: **¿Tienes alguna condición médica que debamos cuidar (como resistencia a la insulina, tiroides, hipertensión o gastritis)? ¿Y a qué hora sueles despertar y acostarte?**`,
+      content: `¡Hola, ${profile.name}! 👋 Soy la Dra. Lucía, tu Nutricionista Clínica en RebajaYA.\n\nPara tu estatura de ${profile.heightCm || 170} cm, la medicina suele situar el rango de peso saludable de menor riesgo metabólico entre los **${minW} kg y ${maxW} kg**. Sin embargo, **la meta la decides 100% tú**, pues lo prioritario es cómo te sientas con tu energía y bienestar. Tu meta actual está fijada en **${profile.targetWeightKg} kg**.\n\nPara diseñar tu plan médico personalizado sin pasar hambre ni sufrir rebote, cuéntame: **¿Tienes alguna condición médica o cirugía previa que debamos cuidar (como cirugía bariátrica / manga gástrica, resistencia a la insulina, tiroides o gastritis)? ¿Y a qué hora sueles despertar y acostarte?**`,
     },
   ]);
   const [userInput, setUserInput] = useState('');
@@ -116,6 +116,11 @@ export default function AiDietGenerator({
             heightCm: profile.heightCm || 170,
             weightKg: profile.currentWeightKg,
             targetKg: profile.targetWeightKg,
+            hasBariatricSurgery:
+              profile.hasBariatricSurgery ||
+              cleanHistory.some((m) =>
+                /bari[aá]trica|manga|bypass|reduc.*est[oó]mago/i.test(m.content)
+              ),
           },
         }),
       });

@@ -21,6 +21,7 @@ export interface UserProfile {
   currentStreakDays?: number;
   lastActiveDate?: string;
   unlockedBadges?: string[];
+  hasBariatricSurgery?: boolean; // Paciente con Cirugía Bariátrica (Manga / Bypass)
   isMainUser?: boolean; // Usuario principal o administrador
   createdAt: string;
 }

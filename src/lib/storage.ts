@@ -17,8 +17,8 @@ export function getWeeklyDefaultMeals(profileId: string): Record<string, MealIte
         name: 'Huevos Revueltos con Espinacas',
         time: '08:00',
         type: 'desayuno',
-        description: '2 huevos revueltos con espinacas y tomate + 1 rebanada de pan integral tostado + Café o infusión sin azúcar.',
-        tips: '1 vaso de agua al despertar para activar la digestión.',
+        description: '2 huevos revueltos con espinacas y tomate + 1 rebanada de pan integral tostado.',
+        tips: '🩺 Regla de separación de líquidos: Cero bebidas durante la comida sólida. Hidrátate 30 min antes o 30-45 min después para cuidar tu digestión.',
         alternatives: ['2 huevos = 1 lata de atún al natural', '1 rebanada pan = 40g avena en hojuelas'],
         dayOfWeek: 'lunes',
       },
@@ -28,7 +28,7 @@ export function getWeeklyDefaultMeals(profileId: string): Record<string, MealIte
         time: '11:00',
         type: 'media_manana',
         description: '1 manzana verde fresca + 8-10 almendras o nueces.',
-        tips: 'Mantiene estable la glucosa en sangre.',
+        tips: 'Mantiene estable la glucosa en sangre. Beber líquidos 30 min antes o después.',
         alternatives: ['Manzana = 1 pera o kiwi', 'Almendras = 1 cda de mantequilla de maní'],
         dayOfWeek: 'lunes',
       },
@@ -38,7 +38,7 @@ export function getWeeklyDefaultMeals(profileId: string): Record<string, MealIte
         time: '13:30',
         type: 'almuerzo',
         description: 'Pechuga de pollo a la plancha (150g) + 1/2 taza de quinoa cocida + ensalada fresca de lechuga, pepino y aceite de oliva.',
-        tips: 'Masticar despacio para favorecer la señal de saciedad.',
+        tips: 'Masticar despacio para favorecer la señal de saciedad. Cero líquidos mientras comes.',
         alternatives: ['Pechuga = 150g pescado blanco o 1 taza de lentejas', 'Quinoa = 1 papa mediana cocida'],
         dayOfWeek: 'lunes',
       },
@@ -48,7 +48,7 @@ export function getWeeklyDefaultMeals(profileId: string): Record<string, MealIte
         time: '17:00',
         type: 'merienda',
         description: 'Yogurt griego natural sin azúcar (150g) con 1 cucharadita de semillas de chía o rodajas de pepino con limón.',
-        tips: 'Acompañar con un vaso grande de agua.',
+        tips: 'Hidrátate entre comidas respetando el intervalo de 30 minutos antes o después de comer.',
         alternatives: ['Yogurt = 1 huevo duro o 1 vaso de leche vegetal con canela'],
         dayOfWeek: 'lunes',
       },
@@ -121,8 +121,8 @@ export function getWeeklyDefaultMeals(profileId: string): Record<string, MealIte
         name: 'Tostadas Integrales con Aguacate y Huevo',
         time: '08:00',
         type: 'desayuno',
-        description: '1 rebanada de pan 100% integral con 1/4 de aguacate machacado + 1 huevo cocido o poché encima + Café solo o té verde.',
-        tips: 'Grasas saludables y proteína de oro para el cerebro.',
+        description: '1 rebanada de pan 100% integral con 1/4 de aguacate machacado + 1 huevo cocido o poché encima.',
+        tips: 'Grasas saludables y proteína de alto valor biológico. Las infusiones tómalas 30 min antes o después.',
         alternatives: ['Pan integral = arepa de maíz delgada o tortilla de maíz'],
         dayOfWeek: 'miercoles',
       },
@@ -151,8 +151,8 @@ export function getWeeklyDefaultMeals(profileId: string): Record<string, MealIte
         name: 'Huevo Cocido con Especias',
         time: '17:00',
         type: 'merienda',
-        description: '1 huevo duro sazonado con pizca de pimentón dulce y sal marina + 1 vaso grande de agua con rodaja de limón.',
-        tips: 'Súper saciante para llegar a la cena sin desesperación.',
+        description: '1 huevo duro sazonado con pizca de pimentón dulce y sal marina.',
+        tips: 'Proteína pura muy saciante. Hidrátate 30 minutos antes o después.',
         alternatives: ['1 huevo = 1 puñado pequeño de frutos secos'],
         dayOfWeek: 'miercoles',
       },
@@ -180,11 +180,11 @@ export function getWeeklyDefaultMeals(profileId: string): Record<string, MealIte
       },
       {
         id: `jue-2`,
-        name: 'Frutos Secos y Té Verde',
+        name: 'Frutos Secos Saludables',
         time: '11:00',
         type: 'media_manana',
-        description: 'Puñado pequeño de nueces o almendras (25g) + 1 taza de té verde o infusión caliente.',
-        tips: 'El té verde acelera la termogénesis de forma natural.',
+        description: 'Puñado pequeño de nueces o almendras tostadas sin sal (25g).',
+        tips: 'Grasas monoinsaturadas y saciedad. Las infusiones calientes tómalas 30 min antes o después.',
         alternatives: ['Nueces = pistachos o cacahuates naturales sin sal'],
         dayOfWeek: 'jueves',
       },
@@ -277,8 +277,8 @@ export function getWeeklyDefaultMeals(profileId: string): Record<string, MealIte
         name: 'Desayuno Campestre Saludable',
         time: '08:30',
         type: 'desayuno',
-        description: '2 huevos al gusto + 1 arepa de maíz o tortilla pequeña + 1 porción de queso fresco bajo en sal + Café con leche descremada o vegetal.',
-        tips: 'Fin de semana con energía sin salirte de tus metas.',
+        description: '2 huevos al gusto + 1 arepa de maíz delgada o tortilla pequeña + 1 porción de queso fresco bajo en sal.',
+        tips: '🩺 Regla de oro bariátrica y digestiva: CERO líquidos con la comida sólida. Tu café o infusión tómalo 30 min antes o 30-45 min después para evitar el síndrome de vaciado rápido (Dumping) y cuidar tu estómago.',
         alternatives: ['Arepa = 1 rebanada de pan integral de masa madre'],
         dayOfWeek: 'sabado',
       },
@@ -288,7 +288,7 @@ export function getWeeklyDefaultMeals(profileId: string): Record<string, MealIte
         time: '11:30',
         type: 'media_manana',
         description: '1 taza de sandía, melón o piña en cubos frescos.',
-        tips: 'Hidratación extra y electrolitos naturales.',
+        tips: 'Hidratación y electrolitos naturales. Mastica pausadamente.',
         alternatives: ['Sandía = 1 manzana o ciruelas'],
         dayOfWeek: 'sabado',
       },
@@ -298,17 +298,17 @@ export function getWeeklyDefaultMeals(profileId: string): Record<string, MealIte
         time: '14:00',
         type: 'almuerzo',
         description: 'Medallón de carne 100% magra casera a la plancha + pan integral + lechuga, tomate y ensalada verde de guarnición.',
-        tips: 'Versión fit deliciosa que calma cualquier antojo de fin de semana.',
+        tips: 'Come primero la proteína y mastica despacio. Cero líquidos durante el almuerzo.',
         alternatives: ['Pan de hamburguesa = al plato con doble ensalada'],
         dayOfWeek: 'sabado',
       },
       {
         id: `sab-4`,
-        name: 'Infusión Helada con Frutos Secos',
+        name: 'Frutos Secos de la Tarde',
         time: '17:30',
         type: 'merienda',
-        description: 'Vaso grande de té helado sin azúcar con limón y menta + 8 nueces.',
-        tips: 'Refrescante y anti-ansiedad para la tarde de fin de semana.',
+        description: '8 nueces o 10 almendras crujientes.',
+        tips: 'Snack proteico de media tarde. Hidrátate media hora antes o media hora después.',
         alternatives: ['Nueces = 10 almendras'],
         dayOfWeek: 'sabado',
       },
@@ -583,13 +583,18 @@ export async function getMealPlan(profileId: string): Promise<MealPlan | null> {
       return null;
     }
 
-    // Si el plan tiene los 7 días idénticos, diversificarlos automáticamente para variedad clínica
+    // Si el plan tiene los 7 días idénticos o contiene la versión antigua con líquidos en comidas sólidas:
     const p = plans[profileId];
-    if (p.weeklyMeals?.lunes && p.weeklyMeals?.martes) {
+    if (p.weeklyMeals) {
       const isIdentical =
-        p.weeklyMeals.lunes[0]?.name &&
+        p.weeklyMeals.lunes &&
+        p.weeklyMeals.martes &&
         p.weeklyMeals.lunes[0]?.name === p.weeklyMeals.martes[0]?.name;
-      if (isIdentical) {
+      const hasOldLiquidCombos =
+        p.weeklyMeals.sabado &&
+        p.weeklyMeals.sabado[0]?.description.toLowerCase().includes('café');
+
+      if (isIdentical || hasOldLiquidCombos) {
         p.weeklyMeals = buildVariedWeeklyPlan(p.meals, profileId);
         plans[profileId] = p;
         setLocal(MEAL_PLANS_KEY, plans);

@@ -39,6 +39,7 @@ export default function AuthScreen({
   const [targetWeight, setTargetWeight] = useState<number>(70);
   const [heightCm, setHeightCm] = useState<number>(170);
   const [age, setAge] = useState<number>(30);
+  const [hasBariatric, setHasBariatric] = useState<boolean>(false);
   const [createError, setCreateError] = useState<string>('');
 
   // Cálculo automático de agua basado en hidratación científica (~30 ml por kg de peso corporal)
@@ -130,6 +131,7 @@ export default function AuthScreen({
       currentWeightKg: Number(currentWeight) || 75,
       targetWeightKg: Number(targetWeight) || 70,
       dailyWaterTargetMl: calculatedWater,
+      hasBariatricSurgery: hasBariatric,
       isMainUser: profiles.length === 0,
       createdAt: new Date().toISOString(),
     };
@@ -467,6 +469,27 @@ export default function AuthScreen({
                     className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500"
                   />
                 </div>
+              </div>
+
+              {/* Opción Cirugía Bariátrica */}
+              <div
+                onClick={() => setHasBariatric(!hasBariatric)}
+                className="p-3 bg-slate-950/70 border border-slate-800 hover:border-slate-700 rounded-2xl flex items-center justify-between gap-3 cursor-pointer transition-colors"
+              >
+                <div>
+                  <span className="text-xs font-bold text-white block">
+                    ¿Tienes Cirugía Bariátrica?
+                  </span>
+                  <span className="text-[10px] text-slate-400 block">
+                    Activa la regla de separación de líquidos y prioridad de proteína
+                  </span>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={hasBariatric}
+                  onChange={(e) => setHasBariatric(e.target.checked)}
+                  className="w-4 h-4 accent-emerald-500 rounded cursor-pointer"
+                />
               </div>
 
               {/* Cálculo automático de agua por la IA */}

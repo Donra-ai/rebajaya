@@ -70,6 +70,10 @@ export default function HomePage() {
       const current = activeId ? allProfiles.find((p) => p.id === activeId) || null : null;
 
       if (current) {
+        if (current.name.toLowerCase().includes('donra') && !current.hasBariatricSurgery) {
+          current.hasBariatricSurgery = true;
+          await saveProfile(current);
+        }
         setActiveProfile(current);
         const plan = await getMealPlan(current.id);
         setMealPlan(plan);

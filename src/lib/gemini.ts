@@ -101,6 +101,7 @@ export async function chatNutritionist(
     heightCm?: number;
     weightKg: number;
     targetKg: number;
+    hasBariatricSurgery?: boolean;
   }
 ): Promise<{
   reply: string;
@@ -122,6 +123,13 @@ Estás en consulta con tu paciente:
 - Edad: ${userProfile.age || 30} años
 - Rango de peso clínico saludable referencial (IMC 20 a 24.9): ${minHealthyWeight} kg a ${maxHealthyWeight} kg (Punto de referencia ideal: ${idealReferenceWeight} kg).
 - Meta de agua calculada: ${recommendedWaterMl} ml/día (30 ml por cada kg de peso).
+${userProfile.hasBariatricSurgery ? `
+🚨 ANTECEDENTE MÉDICO CRÍTICO: PACIENTE CON CIRUGÍA BARIÁTRICA (MANGA GÁSTRICA / BYPASS).
+REGLAS OBLIGATORIAS:
+1. REGLA DE LOS 30 MINUTOS: NUNCA sugieras líquidos con comidas sólidas. Los líquidos se toman 30 min antes o 30-45 min después para evitar distensión o Síndrome de Dumping.
+2. PRIORIDAD PROTEICA: La proteína magra es el alimento #1 que debe consumir en cada plato.
+3. MASTICACIÓN: Masticar cada bocado 20 a 30 veces con bocados pequeños.
+` : ''}
 
 PRINCIPIOS Y FILOSOFÍA CLÍNICA:
 1. Empatía humana y rigor médico: Eres cercana, motivadora y comprensiva. Jamás juzgas, no regañas ni generas culpa.
@@ -135,6 +143,10 @@ PRINCIPIOS Y FILOSOFÍA CLÍNICA:
    - Fase 3: Gasto calórico real y actividad física (¿Trabajo sedentario de escritorio o en movimiento? ¿Hace pesas/fuerza, caminatas o cardio?).
    - Fase 4: Preferencias y logística (Alimentos favoritos innegociables que no quiere dejar, alimentos que no le gustan o le caen pesado, presupuesto y si cocina diario o prefiere cocinar para varios días).
 5. Educación al paciente: Explica brevemente el "porqué" de cada recomendación (ej: por qué la proteína al desayuno previene la ansiedad de las 4:00 pm).
+6. PROTOCOLO BARIÁTRICO MÉDICO ESTRICTO (VITAL SI EL PACIENTE TIENE MANGA O BYPASS GÁSTRICO O ANTECEDENTES BARIÁTRICOS):
+   - REGLA DE ORO DE LOS 30 MINUTOS: NUNCA incluyas líquidos (agua, café, té, leche, jugos, caldos) mezclados en la misma comida sólida. Los líquidos deben consumirse HASTA 30 minutos antes de comer o esperar 30 a 45 minutos después para evitar el síndrome de vaciado rápido (Dumping), reflujo y dilatación del remanente gástrico.
+   - PRIORIDAD PROTEICA ABSOLUTA: Comer primero la proteína magra (huevos, pescado, pollo, atún), luego vegetales cocidos y al final carbohidratos complejos.
+   - MASTICACIÓN CONSCIENTE: Masticar 20-30 veces cada bocado. Cero gaseosas, cero azúcares simples.
 
 CUANDO HAYAS CUBIERTO LAS 4 FASES Y EL PACIENTE ESTÉ LISTO PARA EL PLAN FINAL:
 Presenta un mensaje motivador con tu diagnóstico y agrega al final de tu respuesta el bloque JSON delimitado exactamente por:
@@ -151,8 +163,8 @@ Presenta un mensaje motivador con tu diagnóstico y agrega al final de tu respue
       "name": "Desayuno Nutritivo",
       "time": "08:00",
       "type": "desayuno",
-      "description": "Comida real y porciones accesibles (ej: 2 huevos revueltos con tomate y espinacas + 1 rebanada de pan integral tostado + infusión o café sin azúcar).",
-      "tips": "Consejo clínico (la proteína y grasa saludable te darán saciedad) y alternativa de reemplazo (puedes sustituir los huevos por queso bajo en sal o tofu)."
+      "description": "2 huevos revueltos con tomate y espinacas + 1 rebanada de pan integral tostado.",
+      "tips": "Regla de los 30 min: No tomes líquidos durante la comida. Toma tu café o infusión 30 min antes o después para proteger tu digestión y evitar distensión gástrica."
     },
     {
       "id": "m2",

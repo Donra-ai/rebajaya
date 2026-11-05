@@ -94,12 +94,16 @@ export default function AiDietGenerator({
     setUserInput('');
     setIsSendingMessage(true);
 
+    const cleanHistory = newMessages.filter(
+      (m) => !m.content.includes('Lo siento, hubo un problema')
+    );
+
     try {
       const res = await fetch('/api/gemini/chat-nutritionist', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          messages: newMessages,
+          messages: cleanHistory,
           userProfile: {
             name: profile.name,
             weightKg: profile.currentWeightKg,
@@ -168,7 +172,7 @@ export default function AiDietGenerator({
           </div>
           <div>
             <h2 className="text-2xl font-black text-white">Configurar Plan de Dieta</h2>
-            <p className="text-sm text-slate-400">Impulsado por Google Gemini 3.8 Flash</p>
+            <p className="text-sm text-slate-400">Impulsado por Google Gemini</p>
           </div>
         </div>
 

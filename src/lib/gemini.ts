@@ -5,14 +5,18 @@ const apiKey = process.env.GEMINI_API_KEY || '';
 
 const ai = new GoogleGenAI({ apiKey });
 
-// Modelos en orden de preferencia con fallback automático ante picos de demanda
+// Modelos en orden de preferencia con fallback automático y alta velocidad (<1s)
 const CANDIDATE_MODELS = [
+  'gemini-3.1-flash-lite',
   'gemini-3.5-flash-lite',
-  'gemini-3.8-flash',
-  'gemini-2.5-pro',
+  'gemini-3.5-flash',
 ];
 
-async function callWithFallback(contents: any, systemInstruction?: string): Promise<string> {
+async function callWithFallback(
+  contents: any,
+  systemInstruction?: string,
+  maxOutputTokens: number = 1000
+): Promise<string> {
   let lastError: any = null;
 
   for (const model of CANDIDATE_MODELS) {
@@ -20,12 +24,11 @@ async function callWithFallback(contents: any, systemInstruction?: string): Prom
       const response = await ai.models.generateContent({
         model,
         contents,
-        config: systemInstruction
-          ? {
-              systemInstruction,
-              temperature: 0.2,
-            }
-          : { temperature: 0.2 },
+        config: {
+          ...(systemInstruction ? { systemInstruction } : {}),
+          temperature: 0.3,
+          maxOutputTokens,
+        },
       });
 
       if (response && response.text) {

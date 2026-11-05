@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { parseDietPdf } from '@/lib/gemini';
 
+export const maxDuration = 60;
+
 export async function POST(req: NextRequest) {
   try {
     const { base64Pdf, mimeType } = await req.json();

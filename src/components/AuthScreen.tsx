@@ -2,12 +2,13 @@
 
 import React, { useState, useEffect } from 'react';
 import { UserProfile } from '@/types';
-import { Lock, Plus, ArrowLeft, Delete, Sparkles, Check, AlertCircle, Droplets } from 'lucide-react';
+import { Lock, Plus, ArrowLeft, Delete, Sparkles, Check, AlertCircle, Droplets, Trash2 } from 'lucide-react';
 
 interface AuthScreenProps {
   profiles: UserProfile[];
   onSelectProfile: (profile: UserProfile) => void;
   onCreateProfile: (profile: UserProfile) => void;
+  onResetAllData?: () => Promise<void>;
 }
 
 const AVATAR_OPTIONS = [
@@ -19,6 +20,7 @@ export default function AuthScreen({
   profiles,
   onSelectProfile,
   onCreateProfile,
+  onResetAllData,
 }: AuthScreenProps) {
   // Estados de vista: 'list' (selección), 'pin' (ingresar pin), 'create' (nuevo usuario)
   const [view, setView] = useState<'list' | 'pin' | 'create'>(
@@ -203,6 +205,27 @@ export default function AuthScreen({
               <Plus className="w-4 h-4 stroke-[3]" />
               <span>Crear Nuevo Perfil</span>
             </button>
+
+            {onResetAllData && (
+              <div className="mt-4 text-center">
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (
+                      confirm(
+                        '¿Estás seguro de que deseas eliminar TODOS los perfiles y datos para comenzar 100% desde cero? Esta acción no se puede deshacer.'
+                      )
+                    ) {
+                      await onResetAllData();
+                    }
+                  }}
+                  className="text-[11px] text-slate-500 hover:text-rose-400 transition-colors inline-flex items-center gap-1 font-medium"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Borrar todos los perfiles y empezar de cero</span>
+                </button>
+              </div>
+            )}
           </div>
         )}
 

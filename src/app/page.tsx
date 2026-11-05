@@ -20,6 +20,8 @@ import {
   addReaction,
   getUserStreak,
   getUserBadges,
+  checkAndRunFreshStart,
+  clearAllAppData,
 } from '@/lib/storage';
 import WaterTracker3D from '@/components/WaterTracker3D';
 import MealSchedule from '@/components/MealSchedule';
@@ -60,6 +62,7 @@ export default function HomePage() {
 
     async function loadData() {
       setIsLoading(true);
+      await checkAndRunFreshStart();
       const allProfiles = await getProfiles();
       setProfiles(allProfiles);
 
@@ -125,9 +128,25 @@ export default function HomePage() {
   // Crear nuevo perfil
   const handleCreateProfile = async (newProfile: UserProfile) => {
     await saveProfile(newProfile);
+    // Registrar pesaje inicial de partida
+    await addWeight(newProfile.id, newProfile.initialWeightKg, 'Peso inicial de partida');
     const updated = await getProfiles();
     setProfiles(updated);
     await handleLoginProfile(newProfile);
+  };
+
+  // Eliminar todos los datos y reiniciar app desde cero
+  const handleResetAllData = async () => {
+    setIsLoading(true);
+    await clearAllAppData();
+    setProfiles([]);
+    setActiveProfile(null);
+    setMealPlan(null);
+    setCompletedMealIds([]);
+    setWaterAmount(0);
+    setWeightHistory([]);
+    setReactions([]);
+    setIsLoading(false);
   };
 
   // Marcar/Desmarcar comida
@@ -211,6 +230,7 @@ export default function HomePage() {
         profiles={profiles}
         onSelectProfile={handleLoginProfile}
         onCreateProfile={handleCreateProfile}
+        onResetAllData={handleResetAllData}
       />
     );
   }

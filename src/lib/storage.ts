@@ -412,6 +412,47 @@ function setLocal<T>(key: string, value: T): void {
   }
 }
 
+// ---------------- RESET TOTAL & COMIENZO LIMPIO ----------------
+export const APP_DATA_RESET_KEY = 'rebajaya_fresh_start_2026_clean';
+
+export async function clearAllAppData(): Promise<void> {
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem(PROFILES_KEY);
+    localStorage.removeItem(ACTIVE_PROFILE_KEY);
+    localStorage.removeItem(MEAL_PLANS_KEY);
+    localStorage.removeItem(MEAL_LOGS_KEY);
+    localStorage.removeItem(WATER_LOGS_KEY);
+    localStorage.removeItem(WEIGHT_LOGS_KEY);
+    localStorage.removeItem(REACTIONS_KEY);
+    localStorage.removeItem('papa_profile');
+    localStorage.removeItem('papa_meal_plan');
+  }
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      await supabase.from('meal_logs').delete().neq('id', '0');
+      await supabase.from('water_logs').delete().neq('id', '0');
+      await supabase.from('weight_logs').delete().neq('id', '0');
+      await supabase.from('meal_plans').delete().neq('id', '0');
+      await supabase.from('profiles').delete().neq('id', '0');
+      await supabase.from('family_reactions').delete().neq('id', '0');
+    } catch (e) {
+      console.warn('Supabase reset error', e);
+    }
+  }
+}
+
+export async function checkAndRunFreshStart(): Promise<boolean> {
+  if (typeof window === 'undefined') return false;
+  const hasReset = localStorage.getItem(APP_DATA_RESET_KEY);
+  if (!hasReset) {
+    await clearAllAppData();
+    localStorage.setItem(APP_DATA_RESET_KEY, 'done_v1');
+    return true;
+  }
+  return false;
+}
+
 // ---------------- PROFILES ----------------
 export async function getProfiles(): Promise<UserProfile[]> {
   const local = getLocal<UserProfile[]>(PROFILES_KEY, []);
@@ -648,31 +689,6 @@ export function resetWaterToday(profileId: string, date: string): void {
 export async function getWeightHistory(profileId: string): Promise<WeightLog[]> {
   const logs = getLocal<WeightLog[]>(WEIGHT_LOGS_KEY, []);
   const userLogs = logs.filter((l) => l.profileId === profileId);
-
-  if (userLogs.length === 0) {
-    // Inicializar con dos registros de muestra para que se aprecie la tendencia
-    const initialLogs: WeightLog[] = [
-      {
-        id: 'w-1',
-        profileId,
-        weightKg: 88.5,
-        date: new Date(Date.now() - 14 * 86400000).toISOString().split('T')[0],
-        notes: 'Inicio del plan',
-        timestamp: new Date(Date.now() - 14 * 86400000).toISOString(),
-      },
-      {
-        id: 'w-2',
-        profileId,
-        weightKg: 86.2,
-        date: new Date().toISOString().split('T')[0],
-        notes: '¡Bajando con constancia!',
-        timestamp: new Date().toISOString(),
-      },
-    ];
-    setLocal(WEIGHT_LOGS_KEY, [...logs, ...initialLogs]);
-    return initialLogs;
-  }
-
   return userLogs.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 }
 
@@ -722,27 +738,7 @@ export async function addWeight(
 
 // ---------------- COMMUNITY HUB & REACTIONS ----------------
 export function getReactions(): FamilyReaction[] {
-  const local = getLocal<FamilyReaction[]>(REACTIONS_KEY, [
-    {
-      id: 'r1',
-      senderName: 'Compañero',
-      senderAvatar: '💪',
-      receiverId: 'global',
-      type: 'aplauso',
-      message: '¡Excelente disciplina hoy, sigue así con tu meta!',
-      timestamp: new Date(Date.now() - 3600000).toISOString(),
-    },
-    {
-      id: 'r2',
-      senderName: 'Amigo',
-      senderAvatar: '⭐',
-      receiverId: 'global',
-      type: 'corazon',
-      message: '¡Gran constancia con los hábitos saludables!',
-      timestamp: new Date(Date.now() - 7200000).toISOString(),
-    },
-  ]);
-  return local;
+  return getLocal<FamilyReaction[]>(REACTIONS_KEY, []);
 }
 
 export async function addReaction(reaction: Omit<FamilyReaction, 'id' | 'timestamp'>): Promise<void> {

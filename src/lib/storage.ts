@@ -378,6 +378,43 @@ export function getWeeklyDefaultMeals(profileId: string): Record<string, MealIte
   };
 }
 
+export function buildVariedWeeklyPlan(baseMeals: MealItem[], profileId: string): Record<string, MealItem[]> {
+  const times: Record<string, string> = {
+    desayuno: baseMeals.find((m) => m.type === 'desayuno')?.time || '08:00',
+    media_manana: baseMeals.find((m) => m.type === 'media_manana')?.time || '11:00',
+    almuerzo: baseMeals.find((m) => m.type === 'almuerzo')?.time || '13:30',
+    merienda: baseMeals.find((m) => m.type === 'merienda')?.time || '17:00',
+    cena: baseMeals.find((m) => m.type === 'cena')?.time || '20:30',
+  };
+
+  const defaultWeekly = getWeeklyDefaultMeals(profileId);
+
+  // Lunes conserva exactamente las comidas formuladas por la Dra. Lucía
+  const lunesMeals =
+    baseMeals.length > 0
+      ? baseMeals.map((m) => ({ ...m, dayOfWeek: 'lunes' as const }))
+      : defaultWeekly.lunes;
+
+  // Ajustar horarios de cada día al horario biológico personalizado del paciente
+  const adjustDay = (dayKey: string, meals: MealItem[]): MealItem[] => {
+    return meals.map((m) => ({
+      ...m,
+      time: times[m.type] || m.time,
+      dayOfWeek: dayKey as any,
+    }));
+  };
+
+  return {
+    lunes: lunesMeals,
+    martes: adjustDay('martes', defaultWeekly.martes),
+    miercoles: adjustDay('miercoles', defaultWeekly.miercoles),
+    jueves: adjustDay('jueves', defaultWeekly.jueves),
+    viernes: adjustDay('viernes', defaultWeekly.viernes),
+    sabado: adjustDay('sabado', defaultWeekly.sabado),
+    domingo: adjustDay('domingo', defaultWeekly.domingo),
+  };
+}
+
 export function createDefaultMealPlan(profileId: string, title = 'Plan Nutricional Clínico Semanal'): MealPlan {
   const weekly = getWeeklyDefaultMeals(profileId);
   return {
@@ -545,6 +582,20 @@ export async function getMealPlan(profileId: string): Promise<MealPlan | null> {
       setLocal(MEAL_PLANS_KEY, plans);
       return null;
     }
+
+    // Si el plan tiene los 7 días idénticos, diversificarlos automáticamente para variedad clínica
+    const p = plans[profileId];
+    if (p.weeklyMeals?.lunes && p.weeklyMeals?.martes) {
+      const isIdentical =
+        p.weeklyMeals.lunes[0]?.name &&
+        p.weeklyMeals.lunes[0]?.name === p.weeklyMeals.martes[0]?.name;
+      if (isIdentical) {
+        p.weeklyMeals = buildVariedWeeklyPlan(p.meals, profileId);
+        plans[profileId] = p;
+        setLocal(MEAL_PLANS_KEY, plans);
+      }
+    }
+
     return plans[profileId];
   }
 

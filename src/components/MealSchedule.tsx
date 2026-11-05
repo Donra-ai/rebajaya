@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { MealItem, MealPlan, UserProfile } from '@/types';
+import { buildVariedWeeklyPlan } from '@/lib/storage';
 import confetti from 'canvas-confetti';
 import {
   CheckCircle2,
@@ -260,6 +261,17 @@ export default function MealSchedule({
     }
   };
 
+  const handleDiversifyWeek = () => {
+    if (!plan || !onUpdatePlan) return;
+    const varied = buildVariedWeeklyPlan(plan.meals, userProfile?.id || 'default');
+    const updatedPlan: MealPlan = {
+      ...plan,
+      weeklyMeals: varied,
+    };
+    onUpdatePlan(updatedPlan);
+    confetti({ particleCount: 50, spread: 70, origin: { y: 0.6 } });
+  };
+
   // Determinar ícono y color según tipo de comida
   const getMealBadge = (type: string) => {
     switch (type) {
@@ -350,6 +362,15 @@ export default function MealSchedule({
 
         {/* Acciones Rápidas (Lista de Mercado & Asistente IA) */}
         <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={handleDiversifyWeek}
+            className="flex items-center gap-1.5 px-3.5 py-2 bg-gradient-to-r from-teal-500/20 to-emerald-500/20 hover:from-teal-500/30 hover:to-emerald-500/30 text-teal-300 text-xs font-bold rounded-xl border border-teal-500/40 transition-all shadow-sm active:scale-95"
+            title="Generar platos variados para los 7 días de la semana"
+          >
+            <Sparkles className="w-4 h-4 text-teal-400" />
+            <span>Variar Semana (7 Días)</span>
+          </button>
+
           <button
             onClick={() => setShowGroceryModal(true)}
             className="flex items-center gap-1.5 px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-xl border border-slate-700 hover:border-slate-600 transition-all shadow-sm"

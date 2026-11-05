@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { MealPlan, UserProfile } from '@/types';
+import { buildVariedWeeklyPlan } from '@/lib/storage';
 import { Bot, FileUp, Sparkles, X, Check, Loader2, Send, AlertTriangle, MessageSquare } from 'lucide-react';
 
 interface AiDietGeneratorProps {
@@ -146,6 +147,10 @@ export default function AiDietGenerator({
   const handleConfirmPlan = () => {
     if (!previewPlan) return;
 
+    const weekly =
+      previewPlan.weeklyMeals ||
+      buildVariedWeeklyPlan(previewPlan.meals || [], profile.id);
+
     const finalPlan: MealPlan = {
       id: `plan-${Date.now()}`,
       profileId: profile.id,
@@ -154,15 +159,7 @@ export default function AiDietGenerator({
       summary: previewPlan.summary || '',
       dailyCaloriesEstimate: previewPlan.dailyCaloriesEstimate || 1800,
       meals: previewPlan.meals || [],
-      weeklyMeals: previewPlan.weeklyMeals || {
-        lunes: previewPlan.meals || [],
-        martes: previewPlan.meals || [],
-        miercoles: previewPlan.meals || [],
-        jueves: previewPlan.meals || [],
-        viernes: previewPlan.meals || [],
-        sabado: previewPlan.meals || [],
-        domingo: previewPlan.meals || [],
-      },
+      weeklyMeals: weekly,
       updatedAt: new Date().toISOString(),
     };
 

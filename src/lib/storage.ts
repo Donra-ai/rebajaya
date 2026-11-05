@@ -676,7 +676,12 @@ export async function getWeightHistory(profileId: string): Promise<WeightLog[]> 
   return userLogs.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 }
 
-export async function addWeight(profileId: string, weightKg: number, notes?: string): Promise<void> {
+export async function addWeight(
+  profileId: string,
+  weightKg: number,
+  notes?: string,
+  photoUrl?: string
+): Promise<void> {
   const logs = getLocal<WeightLog[]>(WEIGHT_LOGS_KEY, []);
   const dateStr = new Date().toISOString().split('T')[0];
   const newLog: WeightLog = {
@@ -685,6 +690,7 @@ export async function addWeight(profileId: string, weightKg: number, notes?: str
     weightKg,
     date: dateStr,
     notes,
+    photoUrl,
     timestamp: new Date().toISOString(),
   };
   logs.push(newLog);
@@ -705,6 +711,7 @@ export async function addWeight(profileId: string, weightKg: number, notes?: str
         weight_kg: weightKg,
         date: dateStr,
         notes,
+        photo_url: photoUrl,
       });
       await supabase.from('profiles').update({ current_weight_kg: weightKg }).eq('id', profileId);
     } catch (err) {

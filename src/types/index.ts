@@ -52,6 +52,7 @@ export interface WeightLog {
   weightKg: number;
   date: string; // YYYY-MM-DD
   notes?: string;
+  photoUrl?: string; // Foto de progreso físico (base64 o URL)
   timestamp: string;
 }
 

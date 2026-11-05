@@ -149,9 +149,9 @@ export default function HomePage() {
   };
 
   // Añadir peso
-  const handleAddWeight = async (weight: number, notes?: string) => {
+  const handleAddWeight = async (weight: number, notes?: string, photoUrl?: string) => {
     if (!activeProfile) return;
-    await addWeight(activeProfile.id, weight, notes);
+    await addWeight(activeProfile.id, weight, notes, photoUrl);
     const history = await getWeightHistory(activeProfile.id);
     setWeightHistory(history);
 
